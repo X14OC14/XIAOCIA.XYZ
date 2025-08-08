@@ -17,7 +17,7 @@
       --text: #e6e6f0;
       --muted:#9aa0a6;
       --ring: #8b5cf6;
-      --ring-rgb: 139,92,246; /* buat gradient halus */
+      --ring-rgb: 139,92,246;
       --ring-soft: rgba(139,92,246,.35);
       --ok:#5d9c58; --idle:#e2b248; --dnd:#e85167; --offline:#404040;
     }
@@ -69,18 +69,45 @@
 
     header{display:flex; align-items:center; gap:14px;}
     .avatar{position:relative; width:96px; height:96px; flex:0 0 auto}
-    /* radial gradient halus (default sebelum JS set status) */
+
+    /* RING LEBIH TEBAL & TERANG + PULSE */
     .ring{
-      position:absolute; inset:-4px; border-radius:50%; padding:4px;
+      position:absolute; inset:-8px; border-radius:50%; padding:8px;
       background: radial-gradient(circle,
-        rgba(var(--ring-rgb),0.9) 0%,
-        rgba(var(--ring-rgb),0.45) 35%,
-        rgba(var(--ring-rgb),0.0) 70%
+        rgba(var(--ring-rgb),1) 0%,
+        rgba(var(--ring-rgb),.70) 30%,
+        rgba(var(--ring-rgb),.28) 58%,
+        rgba(var(--ring-rgb),0) 80%
       );
-      filter:drop-shadow(0 10px 30px var(--ring-soft));
+      filter:
+        drop-shadow(0 0 18px rgba(var(--ring-rgb), .50))
+        drop-shadow(0 0 38px rgba(var(--ring-rgb), .35));
+      pointer-events:none;
     }
-    .ring::before{content:""; display:block; width:100%; height:100%; border-radius:inherit; background:linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.04));}
-    .avatar img{position:relative; width:100%; height:100%; border-radius:50%; display:block; object-fit:cover; background:#1f1f2b}
+    .ring::before{
+      content:""; position:absolute; inset:0; border-radius:inherit;
+      background:linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.05));
+    }
+    .ring::after{
+      content:""; position:absolute; inset:-12px; border-radius:inherit;
+      background: radial-gradient(circle, var(--pulse-color, rgba(var(--ring-rgb),.35)) 0%, transparent 70%);
+      transform: scale(0.88); opacity: 0;
+      animation: pulse var(--pulse-duration, 2.6s) ease-out infinite;
+      filter: blur(2px);
+      will-change: transform, opacity;
+      pointer-events:none;
+    }
+    @keyframes pulse{
+      0%   { transform: scale(0.88); opacity: .65; }
+      60%  { transform: scale(1.16); opacity: 0;   }
+      100% { transform: scale(1.22); opacity: 0;   }
+    }
+
+    .avatar img{
+      position:relative; width:100%; height:100%; border-radius:50%;
+      display:block; object-fit:cover; background:#1f1f2b;
+      box-shadow: 0 0 0 3px rgba(255,255,255,.06); /* garis tipis agar avatar kontras */
+    }
     .skeleton{background:linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.14), rgba(255,255,255,.06)); background-size:200% 100%; animation: shimmer 1.2s infinite}
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
@@ -111,6 +138,7 @@
     @media (prefers-reduced-motion: reduce){
       .card{transition:none}
       .overlay{backdrop-filter:none}
+      .ring::after{animation:none}
     }
   </style>
 </head>
@@ -228,16 +256,38 @@
     }
 
     function setStatus(status){
-      let c = getComputedStyle(document.documentElement).getPropertyValue('--offline');
-      if(status==='online') c = getComputedStyle(document.documentElement).getPropertyValue('--ok');
-      else if(status==='idle') c = getComputedStyle(document.documentElement).getPropertyValue('--idle');
-      else if(status==='dnd') c = getComputedStyle(document.documentElement).getPropertyValue('--dnd');
+      let base = getComputedStyle(document.documentElement).getPropertyValue('--offline');
+      if(status==='online') base = getComputedStyle(document.documentElement).getPropertyValue('--ok');
+      else if(status==='idle') base = getComputedStyle(document.documentElement).getPropertyValue('--idle');
+      else if(status==='dnd') base = getComputedStyle(document.documentElement).getPropertyValue('--dnd');
 
-      const g0 = hexToRGBA(c, 0.9);
-      const g1 = hexToRGBA(c, 0.45);
+      const g0 = hexToRGBA(base, 1.0);
+      const g1 = hexToRGBA(base, 0.70);
+      const g2 = hexToRGBA(base, 0.28);
+      const glow = hexToRGBA(base, 0.50);
+      const pulse = hexToRGBA(base, 0.38);
 
-      ring.style.background = `radial-gradient(circle, ${g0} 0%, ${g1} 35%, rgba(0,0,0,0) 70%)`;
-      ring.style.filter = `drop-shadow(0 10px 30px ${hexToRGBA(c,0.35)})`;
+      // Ring gradient & glow
+      ring.style.background =
+        `radial-gradient(circle, ${g0} 0%, ${g1} 30%, ${g2} 58%, rgba(0,0,0,0) 80%)`;
+      ring.style.filter =
+        `drop-shadow(0 0 18px ${glow}) drop-shadow(0 0 38px ${hexToRGBA(base, .35)})`;
+      ring.style.setProperty('--pulse-color', pulse);
+
+      // Avatar outline (double ring tipis + status color)
+      avatar.style.boxShadow =
+        `0 0 0 3px rgba(255,255,255,.06), 0 0 0 6px ${hexToRGBA(base, .55)}`;
+
+      // Durasi pulse per status
+      let dur = '2.6s';
+      if(status==='online') dur = '2.1s';
+      else if(status==='dnd') dur = '2.0s';
+      else if(status==='idle') dur = '3.0s';
+      else dur = '3.4s';
+      ring.style.setProperty('--pulse-duration', dur);
+
+      // Tooltip username warna dikit (opsional, biar nyambung)
+      try { tip.style.color = g1; } catch(e){}
     }
 
     async function loadDiscord(){
