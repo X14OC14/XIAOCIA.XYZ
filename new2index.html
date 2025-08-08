@@ -1,0 +1,266 @@
+<!doctype html> <!-- Deklarasi HTML5 untuk kompatibilitas standar -->
+
+<html lang="ja"> <!-- Bahasa dokumen: Jepang (untuk TTS, screen reader, SEO locale) -->
+<head> <!-- Kepala dokumen: meta, title, stylesheet, dsb. -->
+  <meta charset="utf-8" /> <!-- Encoding UTF-8 supaya karakter JP/ID aman -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> <!-- Responsive di mobile -->
+  <title>xiaocia</title> <!-- Judul tab/browser & default title untuk share jika OG/Twitter tidak tersedia -->
+  <meta name="description" content="ハロー！ なまえは しあおしあ です。はじめまして。" /> <!-- Deskripsi singkat (SEO/snippet) -->
+  <meta name="theme-color" content="#8b5cf6" /> <!-- Warna UI di Android/Chrome (address bar) -->
+  <link rel="canonical" href="https://xiaocia.my.id/" /> <!-- URL kanonis untuk hindari duplikasi SEO -->  <!-- ====== Fonts (Google) ====== -->  <link rel="preconnect" href="https://fonts.googleapis.com"> <!-- Preconnect agar font lebih cepat -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> <!-- Preconnect ke domain font statis -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet"> <!-- Muat font Poppins -->  <!-- ====== Font Awesome 5 + fallback runtime (jsDelivr) ====== -->  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin> <!-- Preconnect ke CDN utama -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/J6Md3KM1ns8xT1L9e7a2e8a9eV0rV0Yc6VxQSy2J3ob7l0mYb5X9Z3K0NQ5n9vDOMkMt2rtVg==" crossorigin="anonymous" referrerpolicy="no-referrer" /> <!-- FA5 utama -->
+  <script> // Jika stylesheet FA5 gagal dimuat (CDN diblok/dll), injeksikan fallback jsDelivr
+    (function(){
+      function ensureFA(){
+        try{
+          // Cek apakah font FA5 sudah tersedia di document.fonts
+          if(document.fonts && (document.fonts.check('1em "Font Awesome 5 Free"') || document.fonts.check('1em "Font Awesome 5 Brands"'))) return; // Sudah ada, stop
+        }catch(e){}
+        // Jika belum ada, tambahkan <link> ke jsDelivr
+        var l = document.createElement('link');
+        l.rel = 'stylesheet';
+        l.href = 'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css'; // Fallback URL
+        l.crossOrigin = 'anonymous';
+        document.head.appendChild(l); // Sisipkan ke <head>
+      }
+      // Tunggu font siap, lalu cek lagi; juga set timeout sebagai jaring pengaman
+      if('fonts' in document){ document.fonts.ready.then(ensureFA); setTimeout(ensureFA, 2000); }
+      else { setTimeout(ensureFA, 0); }
+    })();
+  </script>  <!-- ====== Apple / PWA / Icons ====== -->  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"> <!-- Ikon iOS saat disimpan ke layar utama -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"> <!-- Favicon 32px -->
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"> <!-- Favicon 16px -->
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#8b5cf6"> <!-- Ikon pin Safari (macOS) dengan warna -->
+  <link rel="manifest" href="/site.webmanifest"> <!-- Manifest PWA (nama, ikon, tema) -->
+  <meta name="apple-mobile-web-app-capable" content="yes"> <!-- Izinkan mode web-app di iOS -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> <!-- Gaya status bar iOS -->
+  <meta name="apple-mobile-web-app-title" content="xiaocia"> <!-- Nama app di iOS homescreen -->
+  <meta name="msapplication-TileColor" content="#8b5cf6"> <!-- Warna ubin Windows -->  <!-- ====== Open Graph (Facebook/LinkedIn/WhatsApp) ====== --><meta property="og:type" content="website"> <!-- Tipe konten OG --> <meta property="og:site_name" content="xiaocia"> <!-- Nama situs --> <meta property="og:title" content="xiaocia"> <!-- Judul share --> <meta property="og:description" content="ハロー！ なまえは しあおしあ です。はじめまして。"> <!-- Deskripsi share --> <meta property="og:url" content="https://xiaocia.my.id/"> <!-- URL share --> <meta property="og:image" content="/og-image.png"> <!-- Gambar share 1200x630 --> <meta property="og:locale" content="ja_JP"> <!-- Locale OG -->
+
+  <!-- ====== Twitter Card ====== --><meta name="twitter:card" content="summary_large_image"> <!-- Format kartu besar --> <meta name="twitter:title" content="xiaocia"> <!-- Judul di Twitter --> <meta name="twitter:description" content="ハロー！ なまえは しあおしあ です。はじめまして。"> <!-- Deskripsi di Twitter --> <meta name="twitter:image" content="/og-image.png"> <!-- Gambar di Twitter -->
+
+  <style> /* CSS internal untuk styling halaman */
+    /* ====== THEME ====== */
+    :root{ /* Variabel warna tema agar mudah ganti */
+      --bg: #0b0b12;         /* Warna latar halaman */
+      --panel: #12121b;      /* Warna kartu/panel */
+      --text: #e6e6f0;       /* Warna teks utama */
+      --muted:#9aa0a6;       /* Warna teks sekunder */
+      --ring: #8b5cf6;       /* Aksen utama (ungu) */
+      --ring-soft: rgba(139,92,246,.35); /* Bayangan aksen */
+      --ok:#5d9c58; --idle:#e2b248; --dnd:#e85167; --offline:#404040; /* Warna status Discord */
+    }
+    @media (prefers-color-scheme: light){ /* Mode terang otomatis */
+      :root{ --bg:#fafafa; --panel:#ffffff; --text:#0f172a; --muted:#6b7280; --ring-soft: rgba(139,92,246,.22); }
+    }
+    *{box-sizing:border-box} /* Hitung padding/border di width/height */
+    html,body{height:100%} /* Pastikan tinggi penuh viewport */
+    body{ /* Gaya dasar body */
+      margin:0; font-family:Poppins, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; /* Font stack */
+      color:var(--text); /* Warna teks */
+      background: /* Latar belakang berlapis: dua radial glow + pola topo + warna dasar */
+        radial-gradient(1200px 600px at 15% -10%, rgba(139,92,246,.10), transparent),
+        radial-gradient(1000px 600px at 85% -10%, rgba(14,165,233,.10), transparent),
+        url("topo.svg"), var(--bg);
+      background-size:auto, auto, 600px, auto; /* Skala tiap layer */
+      background-attachment: fixed, fixed, fixed, fixed; /* Efek parallax halus */
+      display:grid; place-items:center; padding:24px; /* Pusatkan konten & beri padding */
+    }
+    .wrap{width:100%; max-width:460px} /* Lebar maksimum kartu */
+
+    /* ====== OVERLAY (ENTRY) ====== */
+    .overlay{position:fixed; inset:0; display:grid; place-items:center; background:rgba(0,0,0,.45); backdrop-filter:blur(12px); z-index:10; cursor:pointer} /* Layar pembuka klik-untuk-masuk */
+    .overlay-text{font-size: clamp(36px, 8vw, 72px); font-weight:800; letter-spacing:.02em; color:#e8e8ff; text-shadow:0 8px 40px rgba(0,0,0,.6)} /* Teks "あ!" besar */
+    .overlay[hidden]{display:none} /* Sembunyikan overlay setelah masuk */
+
+    /* ====== CARD ====== */
+    .card{ background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.10); border-radius:20px; padding:22px; box-shadow: 0 24px 60px rgba(0,0,0,.35); transform:translateY(20px); opacity:0; transition:transform .6s cubic-bezier(.2,.8,.2,1), opacity .6s; } /* Kartu dengan efek kaca & animasi masuk */
+    .card.show{transform:none; opacity:1} /* State setelah tampil */
+
+    header{display:flex; align-items:center; gap:14px;} /* Header: avatar + teks */
+    .avatar{position:relative; width:96px; height:96px; flex:0 0 auto} /* Wadah avatar */
+    .ring{position:absolute; inset:-4px; border-radius:50%; padding:4px; background:conic-gradient(from 0deg, var(--ring), transparent 70%); filter:drop-shadow(0 10px 30px var(--ring-soft));} /* Cincin aksen/ status */
+    .ring::before{content:""; display:block; width:100%; height:100%; border-radius:inherit; background:linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.04));} /* Kilau di cincin */
+    .avatar img{position:relative; width:100%; height:100%; border-radius:50%; display:block; object-fit:cover; background:#1f1f2b} /* Gambar avatar */
+    .skeleton{background:linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.14), rgba(255,255,255,.06)); background-size:200% 100%; animation: shimmer 1.2s infinite} /* Efek loading avatar */
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} /* Animasi skeleton */
+
+    h1{margin:0; font-size:clamp(20px, 3.2vw, 24px)} /* Judul salam */
+    .sub{color:var(--muted); margin-top:4px} /* Subjudul salam */
+
+    /* ====== SOCIAL ====== */
+    .social{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:16px} /* Grid 4 kolom untuk ikon */
+    .btn{display:grid; place-items:center; height:44px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:var(--panel); color:var(--text); text-decoration:none; position:relative} /* Tombol sosial */
+    .btn:hover{box-shadow:0 10px 30px var(--ring-soft); border-color:var(--ring)} /* Hover glow */
+    .btn .tip{position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); background:#2a2a36; color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .2s} /* Tooltip sederhana */
+    .btn:hover .tip{opacity:1} /* Munculkan tooltip saat hover */
+    .btn i{font-size:22px; line-height:1} /* Ukuran ikon Font Awesome */
+
+    /* ====== PLAYER ====== */
+    .player{margin-top:18px; border-top:1px solid rgba(255,255,255,.10); padding-top:16px} /* Area pemutar audio */
+    audio{width:100%; display:none} /* Sembunyikan kontrol default audio, kita pake custom */
+    .ctrls{display:flex; align-items:center; gap:12px} /* Bar kontrol: tombol + progress + waktu */
+    .play{width:44px; height:44px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:var(--panel); cursor:pointer; display:grid; place-items:center} /* Tombol play/pause */
+    .play:focus-visible, .btn:focus-visible{outline:3px solid var(--ring-soft)} /* Fokus keyboard yang jelas */
+    .play i{font-size:20px} /* Ukuran ikon play/pause */
+    .bar{flex:1; display:flex; align-items:center; gap:10px} /* Wadah slider progress */
+    .bar input[type=range]{-webkit-appearance:none; width:100%; height:6px; border-radius:999px; background:#2d2d3b; cursor:pointer} /* Slider track */
+    .bar input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.15)} /* Thumb (WebKit) */
+    .bar input[type=range]::-moz-range-thumb{width:14px; height:14px; border-radius:50%; background:#fff; border:none} /* Thumb (Firefox) */
+    .time{min-width:90px; text-align:right; color:var(--muted); font-variant-tabular-nums: tabular-nums} /* Waktu berjalan/total */
+
+    footer{margin-top:18px; color:var(--muted); font-size:12px; text-align:center} /* Footer sederhana */
+
+    /* ====== Reduced motion ====== */
+    @media (prefers-reduced-motion: reduce){ .card{transition:none} .overlay{backdrop-filter:none} } /* Kurangi animasi untuk aksesibilitas */
+  </style></head>
+<body> <!-- Isi visual halaman mulai di sini -->
+  <div class="overlay" id="overlay" role="button" aria-label="Enter" tabindex="0"> <!-- Overlay pembuka yang bisa di-klik/Enter -->
+    <div class="overlay-text">あ!</div> <!-- Teks "Ah!" -->
+  </div>  <main class="wrap"> <!-- Kontainer utama (maks 460px) -->
+    <section class="card" id="card" aria-live="polite"> <!-- Kartu konten; aria-live supaya update halus -->
+      <header> <!-- Header dengan avatar + salam -->
+        <div class="avatar" aria-hidden="true"> <!-- Wadah avatar (hanya visual) -->
+          <div class="ring" id="ring"></div> <!-- Cincin status (warna dinamis dari Discord) -->
+          <img id="avatar" alt="Xiaocia avatar" class="skeleton" /> <!-- Gambar avatar; skeleton saat loading -->
+        </div>
+        <div> <!-- Teks salam -->
+          <h1>ハロー！</h1> <!-- Salam utama -->
+          <div class="sub">なまえは しあおしあ です、はじめまして。( ᗜˬᗜ )</div> <!-- Sub-salam -->
+        </div>
+      </header><ul class="social" aria-label="Sosial"> <!-- Grid tautan sosial -->
+    <li> <!-- Item Discord -->
+      <a class="btn" href="https://discordapp.com/users/630062323448676352" aria-label="Discord">
+        <span class="tip" id="usernameTip">Discord</span> <!-- Tooltip akan diganti usernamenya -->
+        <i class="fab fa-discord" aria-hidden="true"></i> <!-- Ikon Discord (FA Brands) -->
+      </a>
+    </li>
+    <li> <!-- Item Instagram -->
+      <a class="btn" href="https://instagram.com/xiaocia" aria-label="Instagram">
+        <span class="tip">@xiaocia</span> <!-- Tooltip username IG -->
+        <i class="fab fa-instagram" aria-hidden="true"></i> <!-- Ikon IG -->
+      </a>
+    </li>
+    <li> <!-- Item Facebook -->
+      <a class="btn" href="https://fb.com/oo0.UwU.0oo" aria-label="Facebook">
+        <span class="tip">Mafy</span> <!-- Tooltip nama FB -->
+        <i class="fab fa-facebook" aria-hidden="true"></i> <!-- Ikon FB -->
+      </a>
+    </li>
+    <li> <!-- Item WhatsApp -->
+      <a class="btn" href="https://wa.me/33525330188?text=.menu" aria-label="WhatsApp">
+        <span class="tip">My Bot</span> <!-- Tooltip deskripsi WA -->
+        <i class="fab fa-whatsapp" aria-hidden="true"></i> <!-- Ikon WA -->
+      </a>
+    </li>
+  </ul>
+
+  <div class="player"> <!-- Pemutar audio kustom -->
+    <audio id="audio" preload="none"> <!-- Elemen audio disembunyikan (kontrol kita sendiri) -->
+      <source src="ArcaneTheBridge.mp3" type="audio/mpeg" /> <!-- Ganti file di sini kalau perlu -->
+      Your browser does not support the audio element. <!-- Fallback text -->
+    </audio>
+    <div class="ctrls"> <!-- Bar kontrol audio -->
+      <button class="play" id="play" aria-label="Play/Pause"><i class="fas fa-play" aria-hidden="true"></i></button> <!-- Tombol play/pause (FA Solid) -->
+      <div class="bar"> <!-- Slider progress -->
+        <input type="range" id="progress" min="0" max="100" step="0.1" value="0" aria-label="Progress" /> <!-- Range progress 0-100% -->
+      </div>
+      <div class="time"><span id="cur">0:00</span> / <span id="dur">0:00</span></div> <!-- Waktu berjalan/total -->
+    </div>
+  </div>
+
+  <footer>© <span id="y"></span> xiaocia</footer> <!-- Tahun otomatis + nama -->
+</section>
+
+  </main>  <!-- ====== Schema.org JSON-LD (tidak boleh dikomentari di dalamnya karena JSON murni) ====== -->  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"xiaocia","alternateName":["しあおしあ","Xiaocia"],"url":"https://xiaocia.my.id/","sameAs":["https://discordapp.com/users/630062323448676352","https://instagram.com/xiaocia","https://fb.com/oo0.UwU.0oo","https://wa.me/33525330188?text=.menu"],"knowsLanguage":["ja","id"],"description":"ハロー！ なまえは しあおしあ です。はじめまして。"}</script> <!-- Data terstruktur untuk SEO -->  <script> // Interaksi halaman + pemutar + fetch Discord (Lanyard)
+    /* ====== UTIL ====== */
+    const $ = (s, r=document) => r.querySelector(s); // Helper pilih elemen
+    const fmt = s => { // Format detik -> m:ss
+      if(!isFinite(s)) return '0:00';
+      const m = Math.floor(s/60), t = Math.floor(s%60); return `${m}:${t<10?'0':''}${t}`;
+    };
+
+    /* ====== YEAR ====== */
+    $('#y').textContent = new Date().getFullYear(); // Isi tahun saat ini di footer
+
+    /* ====== OVERLAY INTERACTION ====== */
+    const overlay = $('#overlay'); // Elemen overlay
+    const card = $('#card'); // Kartu utama
+    const audio = $('#audio'); // Elemen audio
+    const playBtn = $('#play'); // Tombol play/pause
+    const progress = $('#progress'); // Slider progress
+    const cur = $('#cur'); // Span waktu berjalan
+    const dur = $('#dur'); // Span total durasi
+
+    function setPlayIcon(isPlaying){ // Ganti ikon tombol sesuai status
+      playBtn.innerHTML = isPlaying ? '<i class="fas fa-pause" aria-hidden="true"></i>' : '<i class="fas fa-play" aria-hidden="true"></i>';
+    }
+
+    function enter(){ // Dipanggil saat user klik/Enter di overlay
+      overlay.style.transition = 'opacity .45s'; // Animasi fadeout overlay
+      overlay.style.opacity = '0';
+      setTimeout(()=> overlay.hidden = true, 450); // Sembunyikan setelah animasi
+      card.classList.add('show'); // Tampilkan kartu (animasi masuk)
+      audio.play().then(()=>{ setPlayIcon(true); }).catch(()=>{}); // Mulai audio (diizinkan karena ada user gesture)
+    }
+    overlay.addEventListener('click', enter); // Klik overlay -> masuk
+    overlay.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); enter(); }}); // Keyboard akses
+
+    /* ====== PLAYER LOGIC ====== */
+    playBtn.addEventListener('click', ()=>{ // Toggle play/pause saat tombol diklik
+      if(audio.paused){ audio.play(); setPlayIcon(true); } else { audio.pause(); setPlayIcon(false); }
+    });
+    audio.addEventListener('loadedmetadata', ()=>{ dur.textContent = fmt(audio.duration); }); // Setelah metadata siap, tampilkan durasi total
+    audio.addEventListener('timeupdate', ()=>{ // Saat waktu berjalan
+      cur.textContent = fmt(audio.currentTime); // Update teks waktu berjalan
+      if(audio.duration) progress.value = (audio.currentTime / audio.duration)*100; // Update slider
+    });
+    progress.addEventListener('input', ()=>{ // Seek saat slider digeser
+      if(audio.duration){ audio.currentTime = (progress.value/100)*audio.duration; }
+    });
+
+    /* ====== DISCORD (Lanyard) ====== */
+    const ring = $('#ring'); // Elemen cincin status
+    const avatar = $('#avatar'); // Gambar avatar
+    const tip = $('#usernameTip'); // Tooltip di tombol Discord
+    const DISCORD_ID = '630062323448676352'; // ID Discord kamu
+    const API = `https://api.lanyard.rest/v1/users/${DISCORD_ID}`; // Endpoint Lanyard
+
+    function setStatus(status){ // Set warna cincin sesuai status
+      let c = getComputedStyle(document.documentElement).getPropertyValue('--offline'); // Default offline
+      if(status==='online') c = getComputedStyle(document.documentElement).getPropertyValue('--ok');
+      else if(status==='idle') c = getComputedStyle(document.documentElement).getPropertyValue('--idle');
+      else if(status==='dnd') c = getComputedStyle(document.documentElement).getPropertyValue('--dnd');
+      ring.style.background = `conic-gradient(from 0deg, ${c}, transparent 70%)`; // Warnai cincin
+      ring.style.filter = `drop-shadow(0 10px 30px ${c}55)`; // Glow sesuai status
+    }
+
+    async function loadDiscord(){ // Ambil data Discord via Lanyard
+      try{
+        const res = await fetch(API); // Fetch API
+        const json = await res.json(); // Parse JSON
+        const d = json?.data; // Data utama
+        const id = d?.discord_user?.id; // User ID
+        const av = d?.discord_user?.avatar; // Hash avatar
+        const username = d?.discord_user?.username || 'Discord'; // Username
+        if(tip) tip.textContent = username; // Tampilkan username di tooltip
+        const status = d?.discord_status || 'offline'; // Status online
+        setStatus(status); // Terapkan warna cincin
+        if(id && av){ // Jika ada avatar
+          const url = `https://cdn.discordapp.com/avatars/${id}/${av}.png?size=256`; // URL avatar resolusi 256
+          avatar.src = url; // Set src gambar
+          avatar.onload = ()=> avatar.classList.remove('skeleton'); // Hapus skeleton saat sudah termuat
+          avatar.onerror = ()=> { avatar.classList.remove('skeleton'); avatar.alt = 'Avatar unavailable'; }; // Fallback jika error
+        } else {
+          avatar.classList.remove('skeleton'); // Tidak ada avatar -> tetap hilangkan skeleton
+        }
+      }catch(e){ // Jika gagal fetch
+        setStatus('offline'); // Anggap offline
+        avatar.classList.remove('skeleton'); // Hilangkan skeleton
+      }
+    }
+    loadDiscord(); // Jalankan fetch saat halaman siap
+  </script></body>
+</html>
