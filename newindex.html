@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
@@ -12,13 +11,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/J6Md3KM1ns8xT1L9e7a2e8a9eV0rV0Yc6VxQSy2J3ob7l0mYb5X9Z3K0NQ5n9vDOMkMt2rtVg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    /* ====== THEME ====== */
     :root{
-      --bg: #0b0b12;         /* page bg */
-      --panel: #12121b;      /* card bg */
-      --text: #e6e6f0;       /* main text */
-      --muted:#9aa0a6;       /* secondary text */
-      --ring: #8b5cf6;       /* accent */
+      --bg: #0b0b12;
+      --panel: #12121b;
+      --text: #e6e6f0;
+      --muted:#9aa0a6;
+      --ring: #8b5cf6;
+      --ring-rgb: 139,92,246; /* buat gradient halus */
       --ring-soft: rgba(139,92,246,.35);
       --ok:#5d9c58; --idle:#e2b248; --dnd:#e85167; --offline:#404040;
     }
@@ -38,64 +37,88 @@
       background-attachment: fixed, fixed, fixed, fixed;
       display:grid; place-items:center; padding:24px;
     }
-    .wrap{width:100%; max-width:460px}/* ====== OVERLAY (ENTRY) ====== */
-.overlay{position:fixed; inset:0; display:grid; place-items:center; background:rgba(0,0,0,.45); backdrop-filter:blur(12px); z-index:10; cursor:pointer}
-.overlay-text{font-size: clamp(36px, 8vw, 72px); font-weight:800; letter-spacing:.02em; color:#e8e8ff; text-shadow:0 8px 40px rgba(0,0,0,.6)}
-.overlay[hidden]{display:none}
+    .wrap{width:100%; max-width:460px}
 
-/* ====== CARD ====== */
-.card{
-  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:20px; padding:22px; box-shadow: 0 24px 60px rgba(0,0,0,.35);
-  transform:translateY(20px); opacity:0; transition:transform .6s cubic-bezier(.2,.8,.2,1), opacity .6s;
-}
-.card.show{transform:none; opacity:1}
+    /* OVERLAY */
+    .overlay{
+      position:fixed; inset:0; display:grid; place-items:center;
+      background:rgba(0,0,0,.45); backdrop-filter:blur(12px);
+      z-index:10; cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .overlay *{ -webkit-tap-highlight-color: transparent; }
+    .overlay:focus{ outline: none; }
+    .overlay:focus-visible{
+      outline: 3px solid var(--ring-soft);
+      outline-offset: 6px;
+    }
+    .overlay-text{font-size: clamp(36px, 8vw, 72px); font-weight:800; letter-spacing:.02em; color:#e8e8ff; text-shadow:0 8px 40px rgba(0,0,0,.6)}
+    .overlay[hidden]{display:none}
 
-header{display:flex; align-items:center; gap:14px;}
-.avatar{position:relative; width:96px; height:96px; flex:0 0 auto}
-.ring{position:absolute; inset:-4px; border-radius:50%; padding:4px; background:conic-gradient(from 0deg, var(--ring), transparent 70%); filter:drop-shadow(0 10px 30px var(--ring-soft));}
-.ring::before{content:""; display:block; width:100%; height:100%; border-radius:inherit; background:linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.04));}
-.avatar img{position:relative; width:100%; height:100%; border-radius:50%; display:block; object-fit:cover; background:#1f1f2b}
-.skeleton{background:linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.14), rgba(255,255,255,.06)); background-size:200% 100%; animation: shimmer 1.2s infinite}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    /* CARD */
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:20px; padding:22px; box-shadow: 0 24px 60px rgba(0,0,0,.35);
+      transform:translateY(20px); opacity:0; transition:transform .6s cubic-bezier(.2,.8,.2,1), opacity .6s;
+    }
+    .card.show{transform:none; opacity:1}
 
-h1{margin:0; font-size:clamp(20px, 3.2vw, 24px)}
-.sub{color:var(--muted); margin-top:4px}
+    header{display:flex; align-items:center; gap:14px;}
+    .avatar{position:relative; width:96px; height:96px; flex:0 0 auto}
+    /* radial gradient halus (default sebelum JS set status) */
+    .ring{
+      position:absolute; inset:-4px; border-radius:50%; padding:4px;
+      background: radial-gradient(circle,
+        rgba(var(--ring-rgb),0.9) 0%,
+        rgba(var(--ring-rgb),0.45) 35%,
+        rgba(var(--ring-rgb),0.0) 70%
+      );
+      filter:drop-shadow(0 10px 30px var(--ring-soft));
+    }
+    .ring::before{content:""; display:block; width:100%; height:100%; border-radius:inherit; background:linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.04));}
+    .avatar img{position:relative; width:100%; height:100%; border-radius:50%; display:block; object-fit:cover; background:#1f1f2b}
+    .skeleton{background:linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.14), rgba(255,255,255,.06)); background-size:200% 100%; animation: shimmer 1.2s infinite}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-/* ====== SOCIAL ====== */
-.social{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:16px}
-.btn{display:grid; place-items:center; height:44px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:var(--panel); color:var(--text); text-decoration:none; position:relative}
-.btn:hover{box-shadow:0 10px 30px var(--ring-soft); border-color:var(--ring)}
-.btn .tip{position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); background:#2a2a36; color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .2s}
-.btn:hover .tip{opacity:1}
+    h1{margin:0; font-size:clamp(20px, 3.2vw, 24px)}
+    .sub{color:var(--muted); margin-top:4px}
 
-/* ====== PLAYER ====== */
-.player{margin-top:18px; border-top:1px solid rgba(255,255,255,.10); padding-top:16px}
-audio{width:100%; display:none}
-.ctrls{display:flex; align-items:center; gap:12px}
-.play{width:44px; height:44px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:var(--panel); cursor:pointer; display:grid; place-items:center}
-.play:focus-visible, .btn:focus-visible{outline:3px solid var(--ring-soft)}
-.bar{flex:1; display:flex; align-items:center; gap:10px}
-.bar input[type=range]{-webkit-appearance:none; width:100%; height:6px; border-radius:999px; background:#2d2d3b; cursor:pointer}
-.bar input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.15)}
-.bar input[type=range]::-moz-range-thumb{width:14px; height:14px; border-radius:50%; background:#fff; border:none}
-.time{min-width:90px; text-align:right; color:var(--muted); font-variant-tabular-nums: tabular-nums}
+    /* SOCIAL */
+    .social{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:16px}
+    .btn{display:grid; place-items:center; height:44px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:var(--panel); color:var(--text); text-decoration:none; position:relative; -webkit-tap-highlight-color: transparent;}
+    .btn:hover{box-shadow:0 10px 30px var(--ring-soft); border-color:var(--ring)}
+    .btn .tip{position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); background:#2a2a36; color:#fff; padding:4px 8px; border-radius:6px; font-size:12px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .2s}
+    .btn:hover .tip{opacity:1}
 
-footer{margin-top:18px; color:var(--muted); font-size:12px; text-align:center}
+    /* PLAYER */
+    .player{margin-top:18px; border-top:1px solid rgba(255,255,255,.10); padding-top:16px}
+    audio{width:100%; display:none}
+    .ctrls{display:flex; align-items:center; gap:12px}
+    .play{width:44px; height:44px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:var(--panel); cursor:pointer; display:grid; place-items:center; -webkit-tap-highlight-color: transparent;}
+    .play:focus-visible, .btn:focus-visible{outline:3px solid var(--ring-soft)}
+    .bar{flex:1; display:flex; align-items:center; gap:10px}
+    .bar input[type=range]{-webkit-appearance:none; width:100%; height:6px; border-radius:999px; background:#2d2d3b; cursor:pointer}
+    .bar input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.15)}
+    .bar input[type=range]::-moz-range-thumb{width:14px; height:14px; border-radius:50%; background:#fff; border:none}
+    .time{min-width:90px; text-align:right; color:var(--muted); font-variant-tabular-nums: tabular-nums}
 
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce){
-  .card{transition:none}
-  .overlay{backdrop-filter:none}
-}
+    footer{margin-top:18px; color:var(--muted); font-size:12px; text-align:center}
 
+    @media (prefers-reduced-motion: reduce){
+      .card{transition:none}
+      .overlay{backdrop-filter:none}
+    }
   </style>
 </head>
 <body>
   <div class="overlay" id="overlay" role="button" aria-label="Enter" tabindex="0">
     <div class="overlay-text">あ!</div>
-  </div>  <main class="wrap">
+  </div>
+  <main class="wrap">
     <section class="card" id="card" aria-live="polite">
       <header>
         <div class="avatar" aria-hidden="true">
@@ -106,62 +129,58 @@ footer{margin-top:18px; color:var(--muted); font-size:12px; text-align:center}
           <h1>ハロー！</h1>
           <div class="sub">なまえは しあおしあ です、はじめまして。( ᗜˬᗜ )</div>
         </div>
-      </header><ul class="social" aria-label="Sosial">
-    <li>
-      <a class="btn" href="https://discordapp.com/users/630062323448676352" aria-label="Discord">
-        <span class="tip" id="usernameTip">Discord</span>
-        <i class="fab fa-discord"></i>
-      </a>
-    </li>
-    <li>
-      <a class="btn" href="https://instagram.com/xiaocia" aria-label="Instagram">
-        <span class="tip">@xiaocia</span>
-        <i class="fab fa-instagram"></i>
-      </a>
-    </li>
-    <li>
-      <a class="btn" href="https://fb.com/oo0.UwU.0oo" aria-label="Facebook">
-        <span class="tip">Mafy</span>
-        <i class="fab fa-facebook"></i>
-      </a>
-    </li>
-    <li>
-      <a class="btn" href="https://wa.me/33525330188?text=.menu" aria-label="WhatsApp">
-        <span class="tip">My Bot</span>
-        <i class="fab fa-whatsapp"></i>
-      </a>
-    </li>
-  </ul>
+      </header>
+      <ul class="social" aria-label="Sosial">
+        <li>
+          <a class="btn" href="https://discordapp.com/users/630062323448676352" aria-label="Discord">
+            <span class="tip" id="usernameTip">Discord</span>
+            <i class="fab fa-discord"></i>
+          </a>
+        </li>
+        <li>
+          <a class="btn" href="https://instagram.com/xiaocia" aria-label="Instagram">
+            <span class="tip">@xiaocia</span>
+            <i class="fab fa-instagram"></i>
+          </a>
+        </li>
+        <li>
+          <a class="btn" href="https://fb.com/oo0.UwU.0oo" aria-label="Facebook">
+            <span class="tip">Mafy</span>
+            <i class="fab fa-facebook"></i>
+          </a>
+        </li>
+        <li>
+          <a class="btn" href="https://wa.me/33525330188?text=.menu" aria-label="WhatsApp">
+            <span class="tip">My Bot</span>
+            <i class="fab fa-whatsapp"></i>
+          </a>
+        </li>
+      </ul>
 
-  <div class="player">
-    <audio id="audio" preload="none">
-      <source src="ArcaneTheBridge.mp3" type="audio/mpeg" />
-      Your browser does not support the audio element.
-    </audio>
-    <div class="ctrls">
-      <button class="play" id="play"><i class="fas fa-play"></i></button>
-      <div class="bar">
-        <input type="range" id="progress" min="0" max="100" step="0.1" value="0" aria-label="Progress" />
+      <div class="player">
+        <audio id="audio" preload="none">
+          <source src="ArcaneTheBridge.mp3" type="audio/mpeg" />
+          Your browser does not support the audio element.
+        </audio>
+        <div class="ctrls">
+          <button class="play" id="play" aria-label="Play/Pause"><i class="fas fa-play" aria-hidden="true"></i></button>
+          <div class="bar">
+            <input type="range" id="progress" min="0" max="100" step="0.1" value="0" aria-label="Progress" />
+          </div>
+          <div class="time"><span id="cur">0:00</span> / <span id="dur">0:00</span></div>
+        </div>
       </div>
-      <div class="time"><span id="cur">0:00</span> / <span id="dur">0:00</span></div>
-    </div>
-  </div>
 
-  <footer>© <span id="y"></span> xiaocia</footer>
-</section>
+      <footer>© <span id="y"></span> xiaocia</footer>
+    </section>
+  </main>
 
-  </main>  <script>
-    /* ====== UTIL ====== */
+  <script>
     const $ = (s, r=document) => r.querySelector(s);
-    const fmt = s => {
-      if(!isFinite(s)) return '0:00';
-      const m = Math.floor(s/60), t = Math.floor(s%60); return `${m}:${t<10?'0':''}${t}`;
-    };
+    const fmt = s => { if(!isFinite(s)) return '0:00'; const m = Math.floor(s/60), t = Math.floor(s%60); return `${m}:${t<10?'0':''}${t}`; };
 
-    /* ====== YEAR ====== */
     $('#y').textContent = new Date().getFullYear();
 
-    /* ====== OVERLAY INTERACTION ====== */
     const overlay = $('#overlay');
     const card = $('#card');
     const audio = $('#audio');
@@ -174,16 +193,17 @@ footer{margin-top:18px; color:var(--muted); font-size:12px; text-align:center}
       overlay.style.transition = 'opacity .45s';
       overlay.style.opacity = '0';
       setTimeout(()=> overlay.hidden = true, 450);
+      overlay.blur();
+      try { playBtn.focus({ preventScroll: true }); } catch(e){}
       card.classList.add('show');
-      audio.play().then(()=>{ playBtn.innerHTML = '<i class="fas fa-pause"></i>'; }).catch(()=>{});
+      audio.play().then(()=>{ playBtn.innerHTML = '<i class="fas fa-pause" aria-hidden="true"></i>'; }).catch(()=>{});
     }
     overlay.addEventListener('click', enter);
     overlay.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); enter(); }});
 
-    /* ====== PLAYER LOGIC ====== */
     playBtn.addEventListener('click', ()=>{
-      if(audio.paused){ audio.play(); playBtn.innerHTML = '<i class="fas fa-pause"></i>'; }
-      else { audio.pause(); playBtn.innerHTML = '<i class="fas fa-play"></i>'; }
+      if(audio.paused){ audio.play(); playBtn.innerHTML = '<i class="fas fa-pause" aria-hidden="true"></i>'; }
+      else { audio.pause(); playBtn.innerHTML = '<i class="fas fa-play" aria-hidden="true"></i>'; }
     });
     audio.addEventListener('loadedmetadata', ()=>{ dur.textContent = fmt(audio.duration); });
     audio.addEventListener('timeupdate', ()=>{
@@ -194,20 +214,30 @@ footer{margin-top:18px; color:var(--muted); font-size:12px; text-align:center}
       if(audio.duration){ audio.currentTime = (progress.value/100)*audio.duration; }
     });
 
-    /* ====== DISCORD (Lanyard) ====== */
     const ring = $('#ring');
     const avatar = $('#avatar');
     const tip = $('#usernameTip');
     const DISCORD_ID = '630062323448676352';
     const API = `https://api.lanyard.rest/v1/users/${DISCORD_ID}`;
 
+    function hexToRGBA(hex, a){
+      const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
+      if(!m) return hex;
+      const r = parseInt(m[1],16), g = parseInt(m[2],16), b = parseInt(m[3],16);
+      return `rgba(${r}, ${g}, ${b}, ${a})`;
+    }
+
     function setStatus(status){
       let c = getComputedStyle(document.documentElement).getPropertyValue('--offline');
       if(status==='online') c = getComputedStyle(document.documentElement).getPropertyValue('--ok');
       else if(status==='idle') c = getComputedStyle(document.documentElement).getPropertyValue('--idle');
       else if(status==='dnd') c = getComputedStyle(document.documentElement).getPropertyValue('--dnd');
-      ring.style.background = `conic-gradient(from 0deg, ${c}, transparent 70%)`;
-      ring.style.filter = `drop-shadow(0 10px 30px ${c}55)`;
+
+      const g0 = hexToRGBA(c, 0.9);
+      const g1 = hexToRGBA(c, 0.45);
+
+      ring.style.background = `radial-gradient(circle, ${g0} 0%, ${g1} 35%, rgba(0,0,0,0) 70%)`;
+      ring.style.filter = `drop-shadow(0 10px 30px ${hexToRGBA(c,0.35)})`;
     }
 
     async function loadDiscord(){
@@ -235,5 +265,6 @@ footer{margin-top:18px; color:var(--muted); font-size:12px; text-align:center}
       }
     }
     loadDiscord();
-  </script></body>
+  </script>
+</body>
 </html>
