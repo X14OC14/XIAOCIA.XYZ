@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>xiaocia — HTML Online Viewer</title>
+<meta name="description" content="xiaocia — fast HTML editor & formatter with instant live preview.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:,">
+<!-- Ace Editor -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.9/ace.js" integrity="sha512-H+mpm0EwKk9x+WZk2CWyLwIapbGQsfG2bK6y2tT2v8+S/2N9M3J8Hq0vD6U9q+Fs3+7xwO4p2m9tP2C0u7f1Bw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.9/ext-language_tools.min.js"></script>
+<!-- js-beautify -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.1/beautify-html.min.js"></script>
+<!-- highlight.js (for Highlight Full Page) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+:root{
+  --bg:#0b0e14; --panel:#0f121a; --muted:#98a2b3; --text:#e6e9ef; --brand:#8b5cf6; --accent:#22d3ee; --line:#1f2837;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+.app{
+  display:grid;
+  grid-template-columns: 260px 8px 1fr;
+  grid-template-rows: 56px 1fr 28px;
+  grid-template-areas:
+    "head head head"
+    "side drag main"
+    "foot foot foot";
+  height:100%;
+}
+
+/* Header */
+.header{
+  grid-area:head;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 16px; border-bottom:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);
+}
+.brand{display:flex; align-items:center; gap:10px}
+.brand-bullet{width:10px;height:10px;border-radius:50%;background:var(--brand);box-shadow:0 0 12px var(--brand)}
+.header h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.2px}
+.header .sub{color:var(--muted);font-size:12px}
+
+/* Sidebar */
+.sidebar{
+  grid-area:side; border-right:1px solid var(--line); background:var(--panel);
+  display:flex; flex-direction:column; padding:12px; gap:12px; min-width:200px; overflow:auto;
+}
+.sidebar .group{display:flex; flex-direction:column; gap:8px}
+.sidebar h2{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.12em; margin:8px 0 4px}
+.btn{
+  width:100%; padding:10px 12px; border:1px solid #1c2433; border-radius:10px; background:#0c111b;
+  color:var(--text); text-align:left; font-size:13px; cursor:pointer;
+  display:flex; align-items:center; gap:10px;
+  transition:transform .06s ease, border-color .2s ease, background .2s ease;
+}
+.btn:hover{border-color:#2b384f; background:#0d1423}
+.kbd{margin-left:auto; color:var(--muted); font-size:11px}
+
+/* Dragbar */
+.dragbar{
+  grid-area:drag; background:transparent; cursor:col-resize; position:relative;
+}
+.dragbar::before{
+  content:""; position:absolute; inset:0; width:2px; margin:auto; background:transparent;
+}
+.dragbar:hover::before{background:#1a2231}
+
+/* Main */
+.main{
+  grid-area:main;
+  display:grid;
+  grid-template-rows: minmax(0,1fr) minmax(0,1fr); /* FIX: biar panel gak nembus */
+  gap:8px; padding:12px; min-height:0;            /* FIX: penting */
+}
+.panel{
+  border:1px solid var(--line); border-radius:12px; overflow:hidden;
+  background:#0d1119; display:flex; flex-direction:column; min-height:0; /* FIX */
+}
+.panel .head{
+  height:38px; display:flex; align-items:center; gap:10px; padding:0 12px;
+  border-bottom:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);
+  font-size:12px; color:var(--muted)
+}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot.red{background:#ff5f56}.dot.yellow{background:#ffbd2e}.dot.green{background:#27c93f}
+.panel .body{flex:1; min-height:0; position:relative;} /* FIX */
+
+/* Editor & Preview */
+#editor{ position:absolute; inset:0; } /* FIX: Ace full fit */
+.previewWrap{ position:relative; height:100%; min-height:0; } /* FIX */
+#liveFrame{ position:absolute; inset:0; border:0; width:100%; height:100%; background:#0a0e16 } /* FIX */
+.previewToolbar{
+  position:absolute; top:8px; right:8px; display:flex; gap:6px; z-index:2;
+}
+.iconBtn{
+  background:rgba(0,0,0,.5); border:1px solid #1c2433; color:#d8dee9; padding:6px 8px; font-size:12px;
+  border-radius:8px; cursor:pointer; backdrop-filter: blur(6px);
+}
+.iconBtn:hover{background:rgba(0,0,0,.65)}
+
+/* Footer / status bar */
+.footer{
+  grid-area:foot; display:flex; align-items:center; gap:16px; padding:0 12px; border-top:1px solid var(--line);
+  color:var(--muted); font-size:12px; background:#0e121a;
+}
+.badge{padding:3px 8px; border:1px solid #1c2433; border-radius:999px; background:#0b0f17}
+
+/* Responsive */
+@media (max-width: 920px){
+  .app{grid-template-columns: 200px 6px 1fr;}
+}
+@media (max-width: 720px){
+  .app{grid-template-columns: 1fr; grid-template-rows: 56px auto auto 28px;
+       grid-template-areas: "head" "side" "main" "foot";}
+  .dragbar{display:none}
+}
+
+/* Utility */
+a.link{color:var(--accent); text-decoration:none}
+a.link:hover{text-decoration:underline}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="brand">
+      <span class="brand-bullet"></span>
+      <h1>xiaocia — HTML Online Viewer</h1>
+    </div>
+    <div class="sub">Edit • Format • Preview (all local & private)</div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="group">
+      <h2>Actions</h2>
+      <button class="btn" onclick="openHtmlPreview()">
+        <span>Preview (Full Page)</span><span class="kbd">Alt+1</span>
+      </button>
+      <button class="btn" onclick="openHighlightedSyntax()">
+        <span>Highlight (Full Page)</span><span class="kbd">Alt+2</span>
+      </button>
+      <button class="btn" onclick="formatHtml()">
+        <span>Format</span><span class="kbd">Alt+3</span>
+      </button>
+      <button class="btn" onclick="unfoldAll()">
+        <span>Expand All</span><span class="kbd">Alt+4</span>
+      </button>
+      <button class="btn" onclick="foldAll()">
+        <span>Collapse All</span><span class="kbd">Alt+5</span>
+      </button>
+      <button class="btn" id="btnSample" onclick="insertSample()">
+        <span>Sample</span><span class="kbd">Alt+6</span>
+      </button>
+      <button class="btn" id="btnClear" onclick="clearTextInput()">
+        <span>Clear</span><span class="kbd">Alt+7</span>
+      </button>
+      <button class="btn" id="btnImport" onclick="importText()">
+        <span>Import</span><span class="kbd">Alt+8</span>
+      </button>
+      <input type="file" id="inpImport" accept="text/html,text/plain,.html,.htm" class="hidden">
+      <button class="btn" id="btnExport" onclick="exportText()">
+        <span>Export</span>
+      </button>
+    </div>
+
+    <div class="group">
+      <h2>Tips</h2>
+      <div style="font-size:12px; color:var(--muted); line-height:1.5">
+        • Live preview di panel kanan (update otomatis).<br>
+        • Full page preview & highlight dibuka di tab baru.<br>
+        • Semua proses lokal — aman & privat.
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>About</h2>
+      <div style="font-size:12px; color:var(--muted); line-height:1.5">
+        Dibuat with ❤️ oleh <b>xiaocia</b>.<br>
+        Editor: Ace • Formatter: js-beautify • Syntax: highlight.js
+      </div>
+    </div>
+  </aside>
+
+  <!-- DRAGBAR -->
+  <div class="dragbar" id="dragbar" title="Drag to resize sidebar"></div>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- Editor -->
+    <section class="panel">
+      <div class="head">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span>Editor</span>
+        <span style="margin-left:auto;color:var(--muted)">Mode: HTML • Theme: One Dark</span>
+      </div>
+      <div class="body"><div id="editor">Put your HTML text here</div></div>
+    </section>
+
+    <!-- Live Preview -->
+    <section class="panel">
+      <div class="head">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span>Live Preview</span>
+      </div>
+      <div class="body previewWrap">
+        <iframe id="liveFrame" title="Live HTML Preview" srcdoc=""
+          sandbox="allow-forms allow-modals allow-pointer-lock allow-popups allow-presentation allow-scripts"></iframe>
+        <div class="previewToolbar">
+          <button class="iconBtn" onclick="openHtmlPreview()" title="Open full page preview">Open</button>
+          <button class="iconBtn" onclick="refreshPreview(true)" title="Refresh preview">Refresh</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer" id="statusbar">
+    <span class="badge" id="sb-lines">Lines: 1</span>
+    <span class="badge" id="sb-chars">Chars: 0</span>
+    <span class="badge" id="sb-render">Rendered: —</span>
+    <span style="margin-left:auto;color:var(--muted)">&copy; <span id="year"></span> xiaocia</span>
+  </footer>
+</div>
+
+<script>
+/* -------------------- ACE SETUP -------------------- */
+let editor = ace.edit("editor");
+editor.setTheme("ace/theme/one_dark");
+editor.session.setMode("ace/mode/html");
+editor.setOptions({
+  fontSize: "13px",
+  tabSize: 2,
+  useSoftTabs: true,
+  showPrintMargin: false,
+  wrap: true,
+  enableBasicAutocompletion: true,
+  enableLiveAutocompletion: true
+});
+editor.session.setUseWorker(false); // avoid cross-origin worker warnings
+
+/* -------------------- LIVE PREVIEW -------------------- */
+const frame = document.getElementById("liveFrame");
+let debounceTimer = null;
+function refreshPreview(manual=false){
+  const start = performance.now();
+  frame.srcdoc = editor.getValue();
+  const elapsed = Math.max(1, Math.round(performance.now() - start));
+  document.getElementById("sb-render").textContent = "Rendered: " + elapsed + " ms" + (manual ? " (manual)" : "");
+}
+editor.session.on('change', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(refreshPreview, 200);
+  updateStatus();
+});
+function updateStatus(){
+  const val = editor.getValue();
+  const lines = editor.session.getLength();
+  document.getElementById("sb-lines").textContent = "Lines: " + lines;
+  document.getElementById("sb-chars").textContent = "Chars: " + val.length;
+}
+refreshPreview(); updateStatus();
+
+/* -------------------- ACTIONS -------------------- */
+function openHtmlPreview(){
+  const html = editor.getValue();
+  const w = window.open("", "_blank");
+  if(!w) return;
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+function openHighlightedSyntax(){
+  const html = editor.getValue()
+    .replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const doc = `
+  <!doctype html><html><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Highlighted — xiaocia</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>body{margin:0;background:#0b0e14;color:#e6e9ef;font-family:Inter,system-ui,sans-serif}
+  pre{padding:20px;overflow:auto;font-size:14px}</style>
+  </head><body>
+  <pre><code class="language-html">${html}</code></pre>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>hljs.highlightAll()</script>
+  </body></html>`;
+  const w = window.open("", "_blank");
+  if(!w) return;
+  w.document.open(); w.document.write(doc); w.document.close();
+}
+
+function formatHtml(){
+  const src = editor.getValue();
+  const pretty = html_beautify(src,{indent_size:2, wrap_attributes:"force-aligned", wrap_line_length: 120});
+  editor.setValue(pretty, -1);
+}
+
+function unfoldAll(){ editor.session.unfold(null, true); }
+function foldAll(){ editor.session.foldAll(1, editor.session.getLength()); }
+function insertSample(){
+  const sample = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sample</title>
+  <style>
+    body{font-family:system-ui, sans-serif;margin:0;display:grid;place-items:center;min-height:100vh;background:#111;color:#eee}
+    .card{padding:24px;border:1px solid #333;border-radius:12px;background:#181818;max-width:600px}
+    .btn{display:inline-block;padding:10px 14px;border:1px solid #444;border-radius:8px;text-decoration:none;color:#eee}
+    .btn:hover{background:#222}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Hello, xiaocia!</h1>
+    <p>This is a sample HTML block. Edit me and see changes live.</p>
+    <a class="btn" href="#">Button</a>
+  </div>
+</body>
+</html>`;
+  editor.setValue(sample, -1);
+}
+function clearTextInput(){ editor.setValue("", -1); refreshPreview(true); }
+
+/* Import / Export */
+document.getElementById("inpImport").addEventListener("change", (e)=>{
+  const file = e.target.files && e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { editor.setValue(String(reader.result), -1); };
+  reader.readAsText(file);
+});
+function importText(){ document.getElementById("inpImport").click(); }
+function exportText(){
+  const blob = new Blob([editor.getValue()], {type:"text/html;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "xiaocia.html"; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* -------------------- SHORTCUTS -------------------- */
+window.addEventListener("keydown", (e)=>{
+  if(!e.altKey) return;
+  const k = e.key;
+  if(['1','2','3','4','5','6','7','8'].includes(k)) e.preventDefault();
+  if(k==='1') openHtmlPreview();
+  if(k==='2') openHighlightedSyntax();
+  if(k==='3') formatHtml();
+  if(k==='4') unfoldAll();
+  if(k==='5') foldAll();
+  if(k==='6') insertSample();
+  if(k==='7') clearTextInput();
+  if(k==='8') importText();
+});
+
+/* -------------------- RESIZER -------------------- */
+const dragbar = document.getElementById("dragbar");
+let isDrag = false, startX=0, startW=0;
+dragbar.addEventListener("mousedown", (e)=>{ isDrag=true; startX=e.clientX; startW=document.getElementById("sidebar").offsetWidth; document.body.style.cursor="col-resize"; });
+window.addEventListener("mousemove",(e)=>{
+  if(!isDrag) return;
+  const dx = e.clientX - startX;
+  const newW = Math.max(180, Math.min(400, startW + dx));
+  document.getElementById("sidebar").style.width = newW + "px";
+  resizeEditor(); // live resize
+});
+window.addEventListener("mouseup", ()=>{ isDrag=false; document.body.style.cursor=""; resizeEditor(); });
+
+/* -------------------- LAYOUT SAFETY -------------------- */
+function resizeEditor(){ if(window.editor){ editor.resize(); } }
+window.addEventListener('load', resizeEditor);
+window.addEventListener('resize', resizeEditor);
+
+/* -------------------- INIT -------------------- */
+document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
