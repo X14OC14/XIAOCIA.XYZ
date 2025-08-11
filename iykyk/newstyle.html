@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>xiaocia · viewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0e14; --panel:#0f121a; --soft:#121826;
+  --fg:#e6e9ef; --muted:#9aa2b3; --line:#1b2538;
+  --accent:#7c5cff; --accent2:#22d3ee; --focus:rgba(124,92,255,.28);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+.app{
+  display:grid; grid-template-rows: 40px 1fr 28px; grid-template-columns: 260px 1fr;
+  grid-template-areas:
+    "top top"
+    "side main"
+    "foot foot";
+  height:100%;
+}
+
+/* Top bar */
+.top{
+  grid-area:top; display:flex; align-items:center; gap:10px; padding:0 10px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.03),transparent);
+  font-family:"JetBrains Mono",monospace; font-size:12px;
+}
+.traffic{display:flex; gap:8px; margin-right:6px}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot.red{background:#ff5f56}.dot.yellow{background:#ffbd2e}.dot.green{background:#27c93f}
+.brand{font-weight:600; letter-spacing:.2px}
+
+/* Sidebar */
+.side{
+  grid-area:side; border-right:1px solid var(--line); background:var(--panel);
+  display:flex; flex-direction:column; min-width:200px; overflow:auto;
+}
+.side .sec{padding:10px 10px 0; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.16em}
+.search{
+  padding:8px 10px; position:sticky; top:0; background:var(--panel); z-index:2; border-bottom:1px solid var(--line);
+}
+.search input{
+  width:100%; height:34px; border:1px solid var(--line); border-radius:8px; background:#0b1220;
+  color:var(--fg); padding:0 10px; outline:none;
+}
+.search input:focus{box-shadow:0 0 0 3px var(--focus); border-color:#2a3854}
+.tree{padding:8px; display:flex; flex-direction:column; gap:6px}
+.item{
+  display:flex; gap:8px; align-items:center; padding:8px; border:1px solid var(--line); border-radius:8px;
+  background:#0c111b; cursor:pointer; user-select:none;
+}
+.item:hover{border-color:#2a3854; background:#0d1423}
+.item.active{border-color:var(--accent); box-shadow:0 0 0 2px rgba(124,92,255,.15) inset}
+.thumb{
+  width:56px;height:36px;border-radius:6px;background:#0a0f1a; flex:0 0 auto; overflow:hidden; display:grid; place-items:center; color:var(--muted); font-size:11px;
+}
+.meta{min-width:0}
+.title{font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.small{font-size:11px; color:var(--muted)}
+.loadmore-wrap{padding:8px}
+.loadmore{
+  width:100%; height:34px; border-radius:8px; border:1px dashed var(--line); background:#0c111b; color:var(--muted); cursor:pointer;
+}
+.loadmore:hover{border-color:#2a3854; color:#cbd5e1}
+
+/* Main */
+.main{grid-area:main; display:grid; grid-template-rows: 34px 1fr 68px; gap:8px; padding:8px 10px}
+.tabbar{display:flex; align-items:center; gap:8px; overflow:auto; padding-bottom:2px}
+.tab{
+  height:28px; display:flex; align-items:center; gap:8px; padding:0 10px; border:1px solid var(--line);
+  border-radius:8px; background:var(--panel); font-size:12px; cursor:pointer; user-select:none;
+}
+.tab.active{border-color:var(--accent); background:#13182a}
+.viewer{
+  position:relative; border:1px solid var(--line); border-radius:14px; overflow:hidden; background:#0a0f1a;
+}
+video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; background:#000}
+.overlay{
+  position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:space-between;
+  pointer-events:none; padding:12px;
+}
+.badge{
+  pointer-events:auto; padding:8px 10px; background:rgba(15,19,33,.55);
+  border:1px solid rgba(255,255,255,.08); border-radius:10px; backdrop-filter:blur(10px);
+  font-size:12px; color:#dfe6f3; box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
+.overlay .right{display:flex; gap:8px}
+.icon{
+  width:36px;height:36px;border-radius:8px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02)); pointer-events:auto; cursor:pointer; user-select:none;
+}
+.icon:hover{border-color:#2a3854}
+
+/* Controls */
+.controls{
+  display:flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:12px; padding:10px;
+  background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+}
+.btn{
+  width:42px;height:42px;border-radius:10px;border:1px solid var(--line); background:#0c111b; color:var(--fg); display:grid; place-items:center;
+  cursor:pointer; user-select:none; font-size:18px;
+}
+.btn:hover{background:#0d1423; border-color:#2a3854}
+.btn:active{transform:translateY(1px)}
+.play{font-size:20px;width:48px;height:48px}
+.slider{flex:1; height:8px; border-radius:999px; background:#172033; border:1px solid var(--line); overflow:hidden}
+.slider > span{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent2)); box-shadow:0 0 14px rgba(124,92,255,.5)}
+.time{width:90px; text-align:right; font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--muted)}
+
+/* Footer */
+.foot{
+  grid-area:foot; border-top:1px solid var(--line); display:flex; align-items:center; gap:12px; padding:0 10px; color:var(--muted); font-size:12px;
+}
+.kbd{font-family:"JetBrains Mono",monospace; padding:2px 6px; border:1px solid var(--line); border-radius:6px; background:#0c111b; color:#cbd5e1}
+
+/* Palette */
+.palette{
+  position:fixed; inset:0; display:none; align-items:flex-start; justify-content:center; padding-top:12vh; z-index:50;
+  background:rgba(0,0,0,.35); backdrop-filter: blur(4px);
+}
+.palette.show{display:flex}
+.pbox{
+  width:min(720px,92vw); background:#0f121a; border:1px solid var(--line); border-radius:12px; overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.55);
+}
+.phead{padding:10px; border-bottom:1px solid var(--line)}
+.phead input{width:100%; height:36px; background:#0b1220; border:1px solid var(--line); border-radius:8px; color:#fff; padding:0 10px; outline:none}
+.phead input:focus{box-shadow:0 0 0 3px var(--focus); border-color:#2a3854}
+.plist{max-height:50vh; overflow:auto}
+.row{display:flex; gap:10px; align-items:center; padding:10px 12px; border-top:1px solid #0e1524; cursor:pointer}
+.row:hover{background:#0c111b}
+.row .cmd{font-family:"JetBrains Mono",monospace; font-size:12px}
+.row .hint{margin-left:auto; color:var(--muted); font-size:11px}
+
+/* Responsive */
+@media (max-width: 900px){ .app{grid-template-columns: 220px 1fr} }
+@media (max-width: 720px){
+  .app{grid-template-columns: 1fr; grid-template-rows: 40px auto auto 28px; grid-template-areas:
+    "top" "main" "side" "foot";}
+  .side{order:2}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="traffic"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+    <div class="brand">xiaocia — viewer</div>
+    <div style="margin-left:auto;color:var(--muted)">Ctrl/Cmd+K: Command Palette</div>
+  </div>
+
+  <aside class="side">
+    <div class="search"><input id="q" placeholder="Cari video…"></div>
+    <div class="sec">playlist</div>
+    <div class="tree" id="tree"></div>
+    <div class="loadmore-wrap"><button id="more" class="loadmore" hidden>Muat lebih banyak…</button></div>
+  </aside>
+
+  <main class="main">
+    <div class="tabbar" id="tabs"></div>
+    <div class="viewer" id="viewer">
+      <video id="v" playsinline preload="metadata" muted></video>
+      <div class="overlay">
+        <div class="badge" id="badge">Memuat video…</div>
+        <div class="right">
+          <div class="icon" id="icCopy" title="Salin tautan">⎘</div>
+          <div class="icon" id="icShare" title="Bagikan">↗</div>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="btn" id="prev" title="Sebelumnya">⟨</div>
+      <div class="btn play" id="play" title="Putar/Jeda">►</div>
+      <div class="btn" id="next" title="Berikutnya">⟩</div>
+      <div class="slider"><span id="bar"></span></div>
+      <div class="btn" id="mute" title="Suara On/Off">🔊</div>
+      <div class="btn" id="full" title="Layar penuh">⤢</div>
+      <div class="time" id="clock">00:00/00:00</div>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span>© <span id="y"></span> xiaocia</span>
+    <span style="margin-left:auto">⌨︎ <span class="kbd">Space</span> play/pause · <span class="kbd">←/→</span> prev/next · <span class="kbd">M</span> mute · <span class="kbd">F</span> fullscreen</span>
+  </footer>
+</div>
+
+<!-- Command palette -->
+<div class="palette" id="pal">
+  <div class="pbox">
+    <div class="phead"><input id="pinput" placeholder="Ketik perintah… (play, pause, next, share, copy, open #3)"></div>
+    <div class="plist" id="plist"></div>
+  </div>
+</div>
+
+<!-- Opsi B: kalau kamu pakai videos.js (global const videos=[...]), tinggal taruh file itu di folder yang sama dan UNCOMMENT baris di bawah -->
+<!-- <script src="./videos.js"></script> -->
+
+<script>
+/* ================== KONFIG DATA ================== */
+/* Default: satu file JSON */
+const DATA_JSON = './videos.json';
+
+/* Alternatif: CHUNK mode (videos-1.json, videos-2.json, ...) */
+const CHUNKED = false;          // set true kalau pakai banyak file
+const CHUNK_PREFIX = 'videos-'; // nama depan file
+const CHUNK_START = 1;          // mulai dari -1
+const CHUNK_END_GUESS = 50;     // batas atas kira-kira (stop saat 404)
+
+/* ================== STATE & ELEM ================== */
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const v=$('#v'), bar=$('#bar'), badge=$('#badge'), clock=$('#clock'), q=$('#q');
+const tree=$('#tree'), tabs=$('#tabs'), moreBtn=$('#more');
+const pal=$('#pal'), pinput=$('#pinput'), plist=$('#plist');
+const prevBtn=$('#prev'), playBtn=$('#play'), nextBtn=$('#next'), muteBtn=$('#mute'), fullBtn=$('#full');
+const shareBtn=$('#icShare'), copyBtn=$('#icCopy');
+document.getElementById('y').textContent = new Date().getFullYear();
+
+let RAW=[], PLAYLIST=[];
+let i=0, filterText="", sliceEnd=0;
+const SLICE_STEP=200;
+
+/* ================== UTIL ================== */
+function fmt(s){ if(!isFinite(s)) return "00:00"; const m=Math.floor(s/60), t=Math.floor(s%60); return `${String(m).padStart(2,'0')}:${String(t).padStart(2,'0')}`; }
+function setBadge(t){ badge.textContent=t; }
+function hostname(u){ try{return new URL(u).hostname;}catch(e){return '';} }
+
+/* ================== DATA LOADER ================== */
+async function loadOneJson(url){
+  const res = await fetch(url, {cache:'no-store'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return await res.json();
+}
+
+async function loadData(){
+  if (Array.isArray(window.videos)) {
+    RAW = window.videos;
+  } else if (!CHUNKED) {
+    try{
+      RAW = await loadOneJson(DATA_JSON);
+    }catch(e){
+      console.error(e);
+      alert('Tidak menemukan videos.json (atau videos.js). Taruh file di folder yang sama.');
+      RAW = [];
+    }
+  } else {
+    RAW = [];
+    for(let n=CHUNK_START; n<=CHUNK_END_GUESS; n++){
+      try{
+        const arr = await loadOneJson(`./${CHUNK_PREFIX}${n}.json`);
+        if(Array.isArray(arr) && arr.length){ RAW.push(...arr); } else { break; }
+      }catch(err){ break; } // stop saat 404
+    }
+    if(!RAW.length) alert('Tidak menemukan videos-*.json. Pastikan namanya benar.');
+  }
+
+  PLAYLIST = RAW.map((x, idx)=>({
+    title: `#${x.id ?? (idx+1)} — ${x.token ?? ''}`.trim(),
+    url: x.video,
+    id: x.id ?? (idx+1)
+  }));
+}
+
+/* ================== UI ================== */
+function renderTabs(){
+  tabs.innerHTML="";
+  const MAX_TABS=12;
+  const start=Math.max(0, i-Math.floor(MAX_TABS/2));
+  const end=Math.min(PLAYLIST.length, start+MAX_TABS);
+  for(let idx=start; idx<end; idx++){
+    const it=PLAYLIST[idx];
+    const t=document.createElement('div'); t.className='tab'+(idx===i?' active':'');
+    t.textContent=(idx+1)+': '+(it.title||'Untitled'); t.title=it.url;
+    t.addEventListener('click',()=>load(idx,true));
+    tabs.appendChild(t);
+  }
+}
+function findIndex(item){ return PLAYLIST.findIndex(x=>x.id===item.id && x.url===item.url); }
+function findIndexByIdAttr(attr){ const n=Number(attr); return isNaN(n)? -1 : PLAYLIST.findIndex(x=>x.id===n); }
+function renderTree(reset=false){
+  if(reset){ tree.innerHTML=""; sliceEnd=0; }
+  const list = filterText
+    ? PLAYLIST.filter(p => (p.title||'').toLowerCase().includes(filterText))
+    : PLAYLIST;
+
+  const targetEnd = Math.min(list.length, sliceEnd+SLICE_STEP);
+  for(let k=sliceEnd; k<targetEnd; k++){
+    const it = list[k];
+    const div=document.createElement('div'); div.className='item'+(it===PLAYLIST[i]?' active':''); div.dataset.i=it.id;
+    div.innerHTML=`<div class="thumb">vid</div>
+      <div class="meta">
+        <div class="title">${it.title||it.url}</div>
+        <div class="small">${hostname(it.url)}</div>
+      </div>`;
+    div.addEventListener('click',()=>load(findIndex(it),true));
+    tree.appendChild(div);
+  }
+  sliceEnd = targetEnd;
+  moreBtn.hidden = (sliceEnd >= list.length);
+}
+function refreshActive(){
+  $$('.item').forEach(el=> el.classList.remove('active'));
+  const card = Array.from(tree.children).find(el => findIndexByIdAttr(el.dataset.i) === i);
+  if(card) card.classList.add('active');
+}
+
+/* ================== PLAYER ================== */
+const barEl=bar;
+function load(n,user=false){
+  if(!PLAYLIST.length) return;
+  i=(n+PLAYLIST.length)%PLAYLIST.length;
+  const cur=PLAYLIST[i];
+  v.pause(); v.src=cur.url; v.load();
+  setBadge('Memuat: '+(cur.title||cur.url));
+  v.play().catch(()=>{});
+  renderTabs(); refreshActive(); updateHash(); updateShare();
+  if(user) flash('Open #'+(i+1));
+}
+function flash(txt){
+  setBadge(txt); clearTimeout(flash._t);
+  flash._t=setTimeout(()=>setBadge('Memutar: '+(PLAYLIST[i].title||PLAYLIST[i].url)),1200);
+}
+function updateHash(){ history.replaceState(null,'',location.pathname+'#v='+i); }
+function fromHash(){ const m=/#v=(\d+)/.exec(location.hash); if(m){ const n=+m[1]; if(!isNaN(n)) i=(n+PLAYLIST.length)%PLAYLIST.length; }}
+
+/* Events */
+v.addEventListener('loadedmetadata',()=>{ setBadge('Memutar: '+(PLAYLIST[i].title||PLAYLIST[i].url)); tick(); });
+v.addEventListener('play',()=>{ playBtn.textContent='❚❚'; });
+v.addEventListener('pause',()=>{ playBtn.textContent='►'; });
+v.addEventListener('timeupdate',tick);
+v.addEventListener('ended',()=>load(i+1));
+function tick(){
+  barEl.style.width = (v.duration? (v.currentTime/v.duration)*100 : 0) + '%';
+  clock.textContent = fmt(v.currentTime)+"/"+fmt(v.duration||0);
+}
+
+/* Controls */
+prevBtn.onclick=()=>load(i-1,true);
+nextBtn.onclick=()=>load(i+1,true);
+playBtn.onclick=()=> v.paused? v.play(): v.pause();
+muteBtn.onclick=()=>{ v.muted=!v.muted; muteBtn.textContent= v.muted?'🔇':'🔊'; };
+fullBtn.onclick=()=>{ const el=document.documentElement; if(!document.fullscreenElement){ (el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen)?.call(el); } else { (document.exitFullscreen||document.webkitExitFullscreen||document.msExitFullscreen)?.call(document); } };
+
+/* Search + Load more */
+q.addEventListener('input',()=>{ filterText=q.value.trim().toLowerCase(); renderTree(true); });
+moreBtn.addEventListener('click',()=> renderTree(false));
+
+/* Share/Copy */
+function updateShare(){
+  const url = location.href.split('#')[0] + '#v=' + i;
+  copyBtn.onclick=()=>{ navigator.clipboard.writeText(url).then(()=>flash('Link disalin')); };
+  shareBtn.onclick=()=>{
+    const title=PLAYLIST[i].title||'Video';
+    if(navigator.share){ navigator.share({title,url}).catch(()=>{}); }
+    else { window.open('https://wa.me/?text='+encodeURIComponent(title+' '+url),'_blank'); }
+  };
+}
+
+/* Keyboard */
+window.addEventListener('keydown',(e)=>{
+  if(['INPUT','TEXTAREA'].includes(e.target?.tagName)) return;
+  const k=e.key.toLowerCase();
+  if(k===' '){ e.preventDefault(); v.paused? v.play(): v.pause(); }
+  else if(k==='arrowleft'){ e.preventDefault(); load(i-1,true); }
+  else if(k==='arrowright'){ e.preventDefault(); load(i+1,true); }
+  else if(k==='m'){ v.muted=!v.muted; muteBtn.textContent= v.muted?'🔇':'🔊'; }
+  else if(k==='f'){ fullBtn.click(); }
+});
+
+/* Palette */
+const COMMANDS=[
+  {name:'Play', run:()=>v.play(), hint:'Space'},
+  {name:'Pause', run:()=>v.pause(), hint:'Space'},
+  {name:'Next', run:()=>load(i+1,true), hint:'→'},
+  {name:'Prev', run:()=>load(i-1,true), hint:'←'},
+  {name:'Mute toggle', run:()=>{ v.muted=!v.muted; muteBtn.textContent= v.muted?'🔇':'🔊'; }, hint:'M'},
+  {name:'Fullscreen toggle', run:()=>fullBtn.click(), hint:'F'},
+  {name:'Share', run:()=>shareBtn.click(), hint:''},
+  {name:'Copy link', run:()=>copyBtn.click(), hint:''},
+];
+function openPalette(){ pal.classList.add('show'); pinput.value=''; renderPalette(); pinput.focus(); }
+function closePalette(){ pal.classList.remove('show'); }
+pal.addEventListener('click',e=>{ if(e.target===pal) closePalette(); });
+window.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); openPalette(); } else if(e.key==='Escape'&&pal.classList.contains('show')) closePalette(); });
+function renderPalette(){
+  plist.innerHTML=''; const qv=pinput.value.trim().toLowerCase(); const rows=[];
+  COMMANDS.forEach(c=>{ if(!qv||c.name.toLowerCase().includes(qv)) rows.push(c); });
+  PLAYLIST.forEach((it,idx)=>{ const n=`Open #${idx+1} – ${it.title||it.url}`; if(!qv||n.toLowerCase().includes(qv)) rows.push({name:n, run:()=>load(idx,true), hint:''}); });
+  rows.slice(0,200).forEach(cmd=>{ const r=document.createElement('div'); r.className='row'; r.innerHTML=`<div class="cmd">${cmd.name}</div><div class="hint">${cmd.hint||''}</div>`; r.addEventListener('click',()=>{ cmd.run(); closePalette(); }); plist.appendChild(r); });
+}
+pinput.addEventListener('input',renderPalette);
+pinput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ const first=plist.querySelector('.row'); if(first){ first.click(); } }});
+
+/* INIT */
+(async function init(){
+  await loadData();
+  if(!PLAYLIST.length){
+    PLAYLIST=[{title:'Sample · Flower', url:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', id:1}];
+  }
+  fromHash();
+  renderTabs();
+  renderTree(true);
+  load(i);
+})();
+</script>
+</body>
+</html>
