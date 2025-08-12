@@ -1,0 +1,231 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pixel Art Converter — White BG + Black Outline</title>
+  <style>
+    :root { --bg:#0b0b0c; --fg:#eaeaea; --muted:#9aa0a6; }
+    html, body { height:100%; }
+    body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial; background:var(--bg); color:var(--fg); display:grid; grid-template-rows:auto 1fr auto; }
+    header, footer { padding:14px 18px; }
+    header { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    h1 { font-size:18px; margin:0; }
+    .panel { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .panel > * { accent-color:#7c3aed; }
+    label { font-size:13px; color:var(--muted); }
+    input[type="number"], input[type="text"] { background:#191a1c; color:var(--fg); border:1px solid #2a2b2e; border-radius:8px; padding:8px 10px; outline:none; }
+    input[type="range"] { width:160px; }
+    button { background:#7c3aed; color:white; border:0; padding:10px 14px; border-radius:999px; cursor:pointer; font-weight:600; }
+    button.ghost { background:#191a1c; border:1px solid #2a2b2e; color:var(--fg); }
+    main { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:12px; }
+    .card { background:#121315; border:1px solid #2a2b2e; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:10px; }
+    .card h2 { margin:0; font-size:14px; color:#c9cdd3; }
+    canvas { width:100%; height:auto; image-rendering: pixelated; background:white; border-radius:10px; }
+    .tip { font-size:12px; color:var(--muted); }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    @media (max-width: 900px){ main{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pixel Art Converter</h1>
+    <div class="panel">
+      <div class="row">
+        <input id="file" type="file" accept="image/*" />
+        <input id="url" type="text" placeholder="or paste image URL…" size="28" />
+        <button id="loadUrl" class="ghost">Load URL</button>
+      </div>
+      <div class="row">
+        <label>Target width
+          <input id="w" type="number" min="16" max="512" value="128" style="width:80px" /> px
+        </label>
+        <label>Palette
+          <input id="palette" type="range" min="4" max="16" value="8" />
+          <span id="paletteVal">8</span>
+        </label>
+        <label>Pixel block
+          <input id="block" type="range" min="1" max="16" value="8" />
+          <span id="blockVal">8</span>
+        </label>
+        <label>Outline strength
+          <input id="edge" type="range" min="0" max="3" value="2" />
+          <span id="edgeVal">2</span>
+        </label>
+      </div>
+      <div class="row">
+        <button id="convert">Convert</button>
+        <button id="download" class="ghost">Download PNG</button>
+      </div>
+    </div>
+  </header>  <main>
+    <div class="card">
+      <h2>Original</h2>
+      <canvas id="src"></canvas>
+      <div class="tip">Tip: you can drag & drop an image anywhere on the page.</div>
+    </div>
+    <div class="card">
+      <h2>Pixel Art (white BG + black outline)</h2>
+      <canvas id="dst"></canvas>
+      <div class="tip">All client‑side. No upload after load.</div>
+    </div>
+  </main>  <footer>
+    <span class="tip">Process: posterize palette → downscale to target width → upscale with NEAREST → Sobel edges → black outlines over white background.</span>
+  </footer><script>
+// Helpers
+function loadImage(src){
+  return new Promise((resolve,reject)=>{ const img=new Image(); img.crossOrigin='anonymous'; img.onload=()=>resolve(img); img.onerror=reject; img.src=src; });
+}
+function drawToCanvas(img, canvas){ const ar=img.height/img.width; canvas.width=Math.min(img.width, 1024); canvas.height=Math.round(canvas.width*ar); const ctx=canvas.getContext('2d'); ctx.drawImage(img,0,0,canvas.width,canvas.height); }
+function toImageData(canvas){ const ctx=canvas.getContext('2d'); return ctx.getImageData(0,0,canvas.width,canvas.height); }
+function putImageData(canvas, imgData){ const ctx=canvas.getContext('2d'); canvas.width=imgData.width; canvas.height=imgData.height; ctx.putImageData(imgData,0,0); }
+
+// Color quantization (posterize) via uniform bucket per channel
+function posterize(imgData, levels=8){
+  const d=imgData.data; const n=d.length; const step=Math.max(2, Math.floor(256/levels));
+  for(let i=0;i<n;i+=4){
+    d[i]   = Math.floor(d[i]/step)*step;   // R
+    d[i+1] = Math.floor(d[i+1]/step)*step; // G
+    d[i+2] = Math.floor(d[i+2]/step)*step; // B
+    // alpha stays
+  }
+  return imgData;
+}
+
+// Replace dark background with white (threshold on brightness)
+function darkToWhite(imgData, thr=45){
+  const d=imgData.data; for(let i=0;i<d.length;i+=4){
+    const r=d[i], g=d[i+1], b=d[i+2];
+    if(r<thr && g<thr && b<thr){ d[i]=255; d[i+1]=255; d[i+2]=255; d[i+3]=255; }
+  } return imgData;
+}
+
+// Downscale to target width, then upscale with NEAREST
+function pixelate(img, targetW=128, block=8){
+  const ar=img.height/img.width;
+  const smallW = targetW; const smallH = Math.max(1, Math.round(smallW*ar));
+  const small=document.createElement('canvas'); small.width=smallW; small.height=smallH; const sctx=small.getContext('2d', {willReadFrequently:true});
+  sctx.imageSmoothingEnabled=false; sctx.drawImage(img,0,0,smallW,smallH);
+  // optional extra blockiness by shrinking more then stretching back
+  if(block>1){
+    const smaller=document.createElement('canvas'); const w=Math.max(1, Math.floor(smallW/block)); const h=Math.max(1, Math.floor(smallH/block));
+    smaller.width=w; smaller.height=h; const s2=smaller.getContext('2d'); s2.imageSmoothingEnabled=false; s2.drawImage(small,0,0,w,h);
+    return {canvas:smaller, scale:block};
+  }
+  return {canvas:small, scale:1};
+}
+
+// Sobel edge detection → return binary edges
+function sobelEdges(imgData, strength=2){
+  const w=imgData.width, h=imgData.height; const d=imgData.data;
+  const gray=new Float32Array(w*h);
+  for(let y=0,idx=0;y<h;y++){
+    for(let x=0;x<w;x++,idx+=4){
+      const r=d[idx], g=d[idx+1], b=d[idx+2]; gray[(y*w)+x]=0.299*r+0.587*g+0.114*b;
+    }
+  }
+  const gx=[-1,0,1,-2,0,2,-1,0,1], gy=[-1,-2,-1,0,0,0,1,2,1];
+  const out=new Uint8ClampedArray(w*h);
+  for(let y=1;y<h-1;y++){
+    for(let x=1;x<w-1;x++){
+      let sx=0, sy=0, k=0;
+      for(let j=-1;j<=1;j++) for(let i=-1;i<=1;i++,k++){
+        const v=gray[(y+j)*w+(x+i)]; sx+=v*gx[k]; sy+=v*gy[k];
+      }
+      const mag=Math.sqrt(sx*sx+sy*sy);
+      out[y*w+x]=mag> (strength*35) ? 255 : 0; // threshold tuned
+    }
+  }
+  return {data:out, width:w, height:h};
+}
+
+function overlayOutlineOnWhite(smallCanvas, edges, scale){
+  // Paint white bg, then draw smallCanvas scaled with NEAREST, then draw edges as black pixels scaled
+  const out=document.getElementById('dst');
+  const ow=smallCanvas.width*scale, oh=smallCanvas.height*scale;
+  out.width=ow; out.height=oh; const ctx=out.getContext('2d');
+  ctx.fillStyle='white'; ctx.fillRect(0,0,ow,oh);
+  ctx.imageSmoothingEnabled=false; ctx.drawImage(smallCanvas,0,0,ow,oh);
+  // Draw edges as black squares
+  const ed=edges.data, w=edges.width, h=edges.height;
+  ctx.fillStyle='black';
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      if(ed[y*w+x]) ctx.fillRect(x*scale, y*scale, scale, scale);
+    }
+  }
+}
+
+async function convertFromImage(img){
+  // Show original
+  const srcC=document.getElementById('src'); drawToCanvas(img, srcC);
+  // Work on a working canvas same as drawToCanvas output
+  const work=document.createElement('canvas'); work.width=srcC.width; work.height=srcC.height; const wctx=work.getContext('2d'); wctx.drawImage(img,0,0,work.width,work.height);
+  let imgData=wctx.getImageData(0,0,work.width,work.height);
+  // Steps: dark→white, posterize, pixelate, edges, overlay
+  const levels=parseInt(document.getElementById('palette').value,10);
+  const block=parseInt(document.getElementById('block').value,10);
+  const targetW=parseInt(document.getElementById('w').value,10);
+  imgData=darkToWhite(imgData, 45);
+  imgData=posterize(imgData, levels);
+  wctx.putImageData(imgData,0,0);
+  const {canvas:small, scale} = pixelate(work, targetW, block);
+  const smallCtx=small.getContext('2d'); const smallData=smallCtx.getImageData(0,0,small.width,small.height);
+  const edges=sobelEdges(smallData, parseInt(document.getElementById('edge').value,10));
+  overlayOutlineOnWhite(small, edges, scale);
+}
+
+// UI bindings
+const palette=document.getElementById('palette');
+const paletteVal=document.getElementById('paletteVal');
+palette.addEventListener('input', ()=> paletteVal.textContent=palette.value);
+const block=document.getElementById('block');
+const blockVal=document.getElementById('blockVal');
+block.addEventListener('input', ()=> blockVal.textContent=block.value);
+const edge=document.getElementById('edge');
+const edgeVal=document.getElementById('edgeVal');
+edge.addEventListener('input', ()=> edgeVal.textContent=edge.value);
+
+// Load from file
+const fileInput=document.getElementById('file');
+fileInput.addEventListener('change', async (e)=>{
+  const f=e.target.files?.[0]; if(!f) return;
+  const url=URL.createObjectURL(f); const img=await loadImage(url); convertFromImage(img);
+});
+
+// Drag & Drop
+window.addEventListener('dragover', e=>{ e.preventDefault(); });
+window.addEventListener('drop', async e=>{ e.preventDefault(); const f=e.dataTransfer.files?.[0]; if(!f) return; const url=URL.createObjectURL(f); const img=await loadImage(url); convertFromImage(img); });
+
+// Load from URL
+const loadBtn=document.getElementById('loadUrl');
+loadBtn.addEventListener('click', async ()=>{
+  const u=document.getElementById('url').value.trim(); if(!u) return;
+  try{ const img=await loadImage(u); convertFromImage(img);}catch(err){ alert('Failed to load image URL'); }
+});
+
+// Convert current URL field if present on first load (prefill with your link)
+document.getElementById('url').value = 'https://cdn.aceimg.com/188dc29ce.jpg';
+
+// Convert button (re-run with new params)
+document.getElementById('convert').addEventListener('click', async ()=>{
+  const src=document.getElementById('src'); if(src.width===0){
+    const u=document.getElementById('url').value.trim(); if(!u){ alert('Load an image first.'); return; }
+    try{ const img=await loadImage(u); convertFromImage(img);}catch(err){ alert('Failed to load image URL'); }
+  } else {
+    const dataUrl=src.toDataURL(); const img=await loadImage(dataUrl); convertFromImage(img);
+  }
+});
+
+// Download
+const dlBtn=document.getElementById('download');
+dlBtn.addEventListener('click', ()=>{
+  const dst=document.getElementById('dst'); if(dst.width===0){ alert('Nothing to download yet.'); return; }
+  const a=document.createElement('a'); a.download='pixel_art.png'; a.href=dst.toDataURL('image/png'); a.click();
+});
+
+// Auto-load your provided URL on start
+(async function(){ try{ const img=await loadImage('https://cdn.aceimg.com/188dc29ce.jpg'); convertFromImage(img);}catch(_){} })();
+</script></body>
+</html>
