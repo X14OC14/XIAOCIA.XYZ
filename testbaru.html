@@ -3,89 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>xiaocia — chaos wave</title>
+  <title>XIAOCIA — Dark Aurora Glasswave</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
+    /* === Base Setup === */
     :root {
-      --fg: #d1d1d1;
-      --muted: #aaa;
+      --fg: #e4e4e6;
+      --muted: #9fa1a7;
+      --glass: rgba(255, 255, 255, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
       font-family: "Poppins", sans-serif;
       color: var(--fg);
-      margin: 0;
       overflow: hidden;
+      background: #050507;
       position: relative;
-      background: #000;
     }
 
-    /* Dynamic wave layers (JS will update gradient positions) */
+    /* === Animated Aurora + Topographic Wave Background === */
     body::before {
       content: "";
       position: fixed;
       inset: 0;
       background:
-        radial-gradient(circle at 20% 30%, rgba(255, 40, 40, 0.55) 0%, transparent 60%),
-        radial-gradient(circle at 70% 20%, rgba(60, 120, 255, 0.55) 0%, transparent 60%),
-        radial-gradient(circle at 85% 80%, rgba(255, 0, 80, 0.45) 0%, transparent 70%),
-        radial-gradient(circle at 30% 90%, rgba(0, 60, 255, 0.45) 0%, transparent 70%),
-        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 70%);
-      background-blend-mode: screen;
-      transition: background-position 3s ease-in-out, background-size 3s ease-in-out;
+        radial-gradient(circle at 30% 20%, rgba(0, 255, 255, 0.15) 0%, transparent 60%),
+        radial-gradient(circle at 70% 30%, rgba(180, 80, 255, 0.2) 0%, transparent 70%),
+        radial-gradient(circle at 50% 80%, rgba(255, 40, 80, 0.2) 0%, transparent 60%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Cpath fill='none' stroke='rgba(255,255,255,0.05)' stroke-width='0.5' d='M0 400 Q400 350 800 400 T1600 400'/%3E%3C/svg%3E");
+      background-size: 200% 200%, 200% 200%, 200% 200%, cover;
+      animation: auroraDrift 30s ease-in-out infinite alternate;
       z-index: -2;
+      will-change: background-position;
     }
 
-    /* Frosted glass texture */
     body::after {
       content: "";
       position: fixed;
       inset: 0;
-      backdrop-filter: blur(25px);
-      background-image:
-        url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQI12NggA8YDwAD0wGjHTzKZwAAAABJRU5ErkJggg=="),
-        linear-gradient(rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.05));
-      background-repeat: repeat;
-      opacity: 0.6;
+      backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.03);
       z-index: -1;
     }
 
-    /* Overlay intro */
+    @keyframes auroraDrift {
+      0% {
+        background-position: 0% 0%, 100% 0%, 50% 100%, 0% 0%;
+      }
+      50% {
+        background-position: 50% 100%, 20% 50%, 80% 0%, 100% 50%;
+      }
+      100% {
+        background-position: 100% 0%, 0% 100%, 50% 50%, 0% 0%;
+      }
+    }
+
+    /* === Overlay Intro === */
     .overlay {
       position: fixed;
       inset: 0;
-      background-color: rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(12px);
-      z-index: 999;
       display: flex;
       justify-content: center;
       align-items: center;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(15px);
       transition: opacity 0.6s ease;
+      z-index: 10;
+      cursor: pointer;
     }
     .overlay-text {
-      font-size: 2.2rem;
+      font-size: clamp(2rem, 5vw, 3rem);
       font-weight: 600;
-      color: var(--fg);
+      color: #e4e4e6;
+      letter-spacing: 0.1em;
       user-select: none;
     }
 
-    /* Profile card */
+    /* === Profile Card === */
     .profile-card {
-      backdrop-filter: blur(8px);
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
-      border: 1px solid #777;
-      padding: 24px;
+      background: var(--glass);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.45);
+      padding: 32px 24px;
       text-align: center;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-      max-width: 400px;
-      width: 100%;
-      margin: auto;
+      width: min(400px, 90%);
       opacity: 0;
       transform: translateY(-40px);
       transition: opacity 0.6s ease, transform 0.6s ease;
@@ -96,86 +110,87 @@
       height: 110px;
       border-radius: 50%;
       border: 3px solid #fff;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 16px rgba(255, 255, 255, 0.2);
       object-fit: cover;
-      transition: border-color 0.3s ease;
     }
 
     .profile-info h2 {
-      font-size: 1.8rem;
-      margin: 8px 0 4px;
+      font-size: 1.6rem;
+      margin-top: 12px;
       color: #fff;
     }
     .profile-info p {
-      font-size: 1rem;
-      line-height: 1.6;
+      font-size: 0.95rem;
       color: var(--muted);
-      margin: 0;
+      line-height: 1.6;
     }
 
-    /* Social icons */
     .social-icons {
       display: flex;
       justify-content: center;
-      gap: 10px;
-      padding: 0;
-      margin: 12px 0 6px;
+      gap: 14px;
+      margin-top: 14px;
       list-style: none;
     }
+
     .social-icons a {
       color: #fff;
-      font-size: 22px;
-      width: 38px;
-      height: 38px;
+      width: 42px;
+      height: 42px;
       display: flex;
-      justify-content: center;
       align-items: center;
-      border: 1px solid #fff;
+      justify-content: center;
       border-radius: 50%;
-      transition: all 0.25s ease;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      transition: 0.3s ease;
+      font-size: 20px;
     }
     .social-icons a:hover {
-      background-color: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.12);
       transform: translateY(-2px);
     }
 
-    /* Music player */
+    /* === Music Player === */
     .music-player {
-      margin-top: 20px;
-      border-top: 1px solid #444;
-      padding-top: 18px;
+      margin-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 16px;
     }
     .controls {
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       gap: 16px;
-      margin-top: 8px;
     }
     .controls button {
       background: none;
       border: none;
-      font-size: 24px;
       color: #fff;
+      font-size: 24px;
       cursor: pointer;
-      transition: opacity 0.25s;
+      transition: 0.2s;
     }
-    .controls button:hover { opacity: 0.7; }
+    .controls button:hover {
+      opacity: 0.7;
+    }
+
     .progress-bar {
       flex-grow: 1;
       display: flex;
       align-items: center;
+      margin: 0 10px;
     }
-    .progress-bar input[type='range'] {
+
+    input[type="range"] {
+      -webkit-appearance: none;
       width: 100%;
       height: 4px;
-      background: #555;
       border-radius: 2px;
-      appearance: none;
-      outline: none;
+      background: rgba(255, 255, 255, 0.15);
       cursor: pointer;
     }
-    .progress-bar input::-webkit-slider-thumb {
+
+    input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 10px;
       height: 10px;
@@ -183,42 +198,47 @@
       background: #fff;
       transition: background-color 0.2s;
     }
-    .progress-bar input:hover::-webkit-slider-thumb {
-      background-color: #ccc;
+
+    input[type="range"]:hover::-webkit-slider-thumb {
+      background: #ddd;
     }
+
     #duration-info {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--muted);
       margin-top: 4px;
+    }
+
+    @media (max-width: 500px) {
+      .profile-card {
+        padding: 24px 16px;
+      }
+      .social-icons a {
+        width: 38px;
+        height: 38px;
+        font-size: 18px;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div id="overlay" class="overlay" onclick="handleOverlayClick()">
+  <div class="overlay" id="overlay" onclick="handleOverlayClick()">
     <div class="overlay-text">あ!</div>
   </div>
 
   <div class="profile-card" id="profile-card">
-    <div class="profile-img"><img src="" alt="avatar" /></div>
+    <div class="profile-img"><img src="" alt="avatar" id="avatar" /></div>
     <div class="profile-info">
       <h2>ハロー！</h2>
       <p>なまえは しあおしあ です、<br />はじめまして。(ᗜˬᗜ)</p>
     </div>
 
     <ul class="social-icons">
-      <li>
-        <a href="https://discordapp.com/users/630062323448676352"><i class="fab fa-discord"></i></a>
-      </li>
-      <li>
-        <a href="https://instagram.com/xiaocia"><i class="fab fa-instagram"></i></a>
-      </li>
-      <li>
-        <a href="https://fb.com/oo0.UwU.0oo"><i class="fab fa-facebook"></i></a>
-      </li>
-      <li>
-        <a href="https://wa.me/33525330188?text=.menu"><i class="fab fa-whatsapp"></i></a>
-      </li>
+      <li><a href="https://discordapp.com/users/630062323448676352"><i class="fab fa-discord"></i></a></li>
+      <li><a href="https://instagram.com/xiaocia"><i class="fab fa-instagram"></i></a></li>
+      <li><a href="https://fb.com/oo0.UwU.0oo"><i class="fab fa-facebook"></i></a></li>
+      <li><a href="https://wa.me/33525330188?text=.menu"><i class="fab fa-whatsapp"></i></a></li>
     </ul>
 
     <div class="music-player">
@@ -227,39 +247,31 @@
       </audio>
       <div class="controls">
         <button id="play-pause-button"><i class="fas fa-play"></i></button>
-        <div class="progress-bar"><input type="range" min="0" max="100" value="0" step="0.1" id="progress-bar" /></div>
+        <div class="progress-bar">
+          <input type="range" min="0" max="100" value="0" id="progress-bar" />
+        </div>
       </div>
       <div id="duration-info"><span id="current-time">0:00</span> / <span id="total-duration">0:00</span></div>
     </div>
   </div>
 
   <script>
-    function handleOverlayClick() {
-      const overlay = document.getElementById("overlay");
-      const profile = document.getElementById("profile-card");
-      const audio = document.getElementById("audio-player");
-      const btn = document.getElementById("play-pause-button");
-      overlay.style.opacity = "0";
-      setTimeout(() => (overlay.style.display = "none"), 600);
-      profile.style.opacity = "1";
-      profile.style.transform = "translateY(0)";
-      audio.play();
-      btn.innerHTML = '<i class="fas fa-pause"></i>';
-    }
-
-    // Music controls
+    const overlay = document.getElementById("overlay");
+    const card = document.getElementById("profile-card");
     const audio = document.getElementById("audio-player");
+    const btn = document.getElementById("play-pause-button");
     const bar = document.getElementById("progress-bar");
     const current = document.getElementById("current-time");
     const total = document.getElementById("total-duration");
-    const btn = document.getElementById("play-pause-button");
 
-    audio.addEventListener("timeupdate", () => {
-      const val = (audio.currentTime / audio.duration) * 100;
-      bar.value = val || 0;
-      current.textContent = fmt(audio.currentTime);
-      total.textContent = fmt(audio.duration);
-    });
+    function handleOverlayClick() {
+      overlay.style.opacity = "0";
+      setTimeout(() => (overlay.style.display = "none"), 600);
+      card.style.opacity = "1";
+      card.style.transform = "translateY(0)";
+      audio.play();
+      btn.innerHTML = '<i class="fas fa-pause"></i>';
+    }
 
     btn.addEventListener("click", () => {
       if (audio.paused) {
@@ -271,58 +283,27 @@
       }
     });
 
-    function fmt(s) {
-      const m = Math.floor(s / 60);
-      const sec = Math.floor(s % 60);
-      return `${m}:${sec < 10 ? "0" : ""}${sec}`;
+    audio.addEventListener("timeupdate", () => {
+      const progress = (audio.currentTime / audio.duration) * 100;
+      bar.value = progress || 0;
+      current.textContent = fmt(audio.currentTime);
+      total.textContent = fmt(audio.duration);
+    });
+
+    function fmt(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m}:${s < 10 ? "0" : ""}${s}`;
     }
 
-    // Chaotic wave randomizer
-    const body = document.body;
-    function randomPos() {
-      const rand = () => Math.floor(Math.random() * 100);
-      body.style.setProperty(
-        "--wavePos",
-        `${rand()}% ${rand()}%, ${rand()}% ${rand()}%, ${rand()}% ${rand()}%, ${rand()}% ${rand()}%, ${rand()}% ${rand()}%`
-      );
-      body.style.setProperty(
-        "background-position",
-        `${rand()}% ${rand()}%, ${rand()}% ${rand()}%, ${rand()}% ${rand()}%`
-      );
-      const before = body.querySelector("::before");
-    }
-
-    // real random movement by editing style string
-    const bg = document.querySelector("body::before");
-    const style = document.styleSheets[0].cssRules;
-    // simulate subtle chaos update
-    setInterval(() => {
-      const before = document.querySelector("body::before");
-      const x1 = Math.floor(Math.random() * 100);
-      const y1 = Math.floor(Math.random() * 100);
-      const x2 = Math.floor(Math.random() * 100);
-      const y2 = Math.floor(Math.random() * 100);
-      const el = document.body;
-      el.style.setProperty("--x1", x1 + "% " + y1 + "%");
-      el.style.setProperty("--x2", x2 + "% " + y2 + "%");
-      // update directly
-      el.style.setProperty(
-        "background-position",
-        `${x1}% ${y1}%, ${x2}% ${y2}%, 50% 50%`
-      );
-      document.body.style.setProperty(
-        "filter",
-        `brightness(${0.95 + Math.random() * 0.1})`
-      );
-    }, 4000);
-
-    // Fetch Discord data
+    // Fetch Discord avatar + status
     fetch("https://api.lanyard.rest/v1/users/630062323448676352")
       .then((r) => r.json())
       .then((data) => {
         const d = data.data;
-        const img = document.querySelector(".profile-img img");
         const user = d.discord_user;
+        const avatar = document.getElementById("avatar");
+        avatar.src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
         const color =
           d.discord_status === "online"
             ? "#5d9c58"
@@ -331,10 +312,9 @@
             : d.discord_status === "dnd"
             ? "#e85167"
             : "#404040";
-        img.style.border = `3px solid ${color}`;
-        img.src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+        avatar.style.border = `3px solid ${color}`;
       })
-      .catch((e) => console.error(e));
+      .catch(() => console.warn("Discord API fetch failed"));
   </script>
 </body>
 </html>
