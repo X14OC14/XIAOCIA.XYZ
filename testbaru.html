@@ -3,11 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>xiaocia</title>
+  <title>xiaocia — chaos wave</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
       --fg: #d1d1d1;
@@ -19,50 +17,42 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      font-family: 'Poppins', sans-serif;
+      font-family: "Poppins", sans-serif;
       color: var(--fg);
       margin: 0;
       overflow: hidden;
       position: relative;
+      background: #000;
     }
 
-    /* --- wave gradient background --- */
+    /* Dynamic wave layers (JS will update gradient positions) */
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle at 20% 20%, rgba(255, 80, 80, 0.25) 0%, transparent 60%),
-                  radial-gradient(circle at 80% 30%, rgba(80, 120, 255, 0.25) 0%, transparent 60%),
-                  radial-gradient(circle at 40% 80%, rgba(0, 0, 0, 0.8) 0%, rgba(0,0,0,0.9) 70%);
+      background:
+        radial-gradient(circle at 20% 30%, rgba(255, 40, 40, 0.55) 0%, transparent 60%),
+        radial-gradient(circle at 70% 20%, rgba(60, 120, 255, 0.55) 0%, transparent 60%),
+        radial-gradient(circle at 85% 80%, rgba(255, 0, 80, 0.45) 0%, transparent 70%),
+        radial-gradient(circle at 30% 90%, rgba(0, 60, 255, 0.45) 0%, transparent 70%),
+        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 70%);
       background-blend-mode: screen;
-      animation: waveMove 60s ease-in-out infinite alternate;
+      transition: background-position 3s ease-in-out, background-size 3s ease-in-out;
       z-index: -2;
     }
 
-    /* --- frosted sand-glass overlay --- */
+    /* Frosted glass texture */
     body::after {
       content: "";
       position: fixed;
       inset: 0;
-      backdrop-filter: blur(20px);
+      backdrop-filter: blur(25px);
       background-image:
         url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQI12NggA8YDwAD0wGjHTzKZwAAAABJRU5ErkJggg=="),
-        linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.03));
+        linear-gradient(rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.05));
       background-repeat: repeat;
-      opacity: 0.45;
+      opacity: 0.6;
       z-index: -1;
-    }
-
-    @keyframes waveMove {
-      0% {
-        background-position: 0% 0%, 100% 0%, 50% 100%;
-      }
-      50% {
-        background-position: 50% 80%, 30% 50%, 80% 20%;
-      }
-      100% {
-        background-position: 100% 0%, 0% 100%, 20% 50%;
-      }
     }
 
     /* Overlay intro */
@@ -77,12 +67,10 @@
       align-items: center;
       transition: opacity 0.6s ease;
     }
-
     .overlay-text {
       font-size: 2.2rem;
       font-weight: 600;
       color: var(--fg);
-      text-align: center;
       user-select: none;
     }
 
@@ -91,7 +79,7 @@
       backdrop-filter: blur(8px);
       background: rgba(255, 255, 255, 0.05);
       border-radius: 12px;
-      border: 1px solid #888;
+      border: 1px solid #777;
       padding: 24px;
       text-align: center;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
@@ -151,30 +139,6 @@
       transform: translateY(-2px);
     }
 
-    .tooltip {
-      position: relative;
-    }
-    .tooltiptext {
-      visibility: hidden;
-      opacity: 0;
-      position: absolute;
-      top: 110%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #444;
-      border: 1px solid #777;
-      color: #fff;
-      font-size: 12px;
-      border-radius: 4px;
-      padding: 2px 6px;
-      white-space: nowrap;
-      transition: opacity 0.3s;
-    }
-    .tooltip:hover .tooltiptext {
-      visibility: visible;
-      opacity: 1;
-    }
-
     /* Music player */
     .music-player {
       margin-top: 20px;
@@ -196,9 +160,7 @@
       cursor: pointer;
       transition: opacity 0.25s;
     }
-    .controls button:hover {
-      opacity: 0.7;
-    }
+    .controls button:hover { opacity: 0.7; }
     .progress-bar {
       flex-grow: 1;
       display: flex;
@@ -229,10 +191,6 @@
       color: var(--muted);
       margin-top: 4px;
     }
-
-    @media (max-width: 600px) {
-      .profile-card { max-width: 100%; }
-    }
   </style>
 </head>
 
@@ -250,28 +208,16 @@
 
     <ul class="social-icons">
       <li>
-        <a href="https://discordapp.com/users/630062323448676352" class="tooltip">
-          <span class="tooltiptext" id="usernameTooltip"></span>
-          <i class="fab fa-discord"></i>
-        </a>
+        <a href="https://discordapp.com/users/630062323448676352"><i class="fab fa-discord"></i></a>
       </li>
       <li>
-        <a href="https://instagram.com/xiaocia" class="tooltip">
-          <span class="tooltiptext">xiaocia</span>
-          <i class="fab fa-instagram"></i>
-        </a>
+        <a href="https://instagram.com/xiaocia"><i class="fab fa-instagram"></i></a>
       </li>
       <li>
-        <a href="https://fb.com/oo0.UwU.0oo" class="tooltip">
-          <span class="tooltiptext">Mafy</span>
-          <i class="fab fa-facebook"></i>
-        </a>
+        <a href="https://fb.com/oo0.UwU.0oo"><i class="fab fa-facebook"></i></a>
       </li>
       <li>
-        <a href="https://wa.me/33525330188?text=.menu" class="tooltip">
-          <span class="tooltiptext">My Bot</span>
-          <i class="fab fa-whatsapp"></i>
-        </a>
+        <a href="https://wa.me/33525330188?text=.menu"><i class="fab fa-whatsapp"></i></a>
       </li>
     </ul>
 
@@ -289,34 +235,33 @@
 
   <script>
     function handleOverlayClick() {
-      const overlay = document.getElementById('overlay');
-      const profile = document.getElementById('profile-card');
-      const audio = document.getElementById('audio-player');
-      const btn = document.getElementById('play-pause-button');
-
-      overlay.style.opacity = '0';
-      setTimeout(() => (overlay.style.display = 'none'), 600);
-
-      profile.style.opacity = '1';
-      profile.style.transform = 'translateY(0)';
+      const overlay = document.getElementById("overlay");
+      const profile = document.getElementById("profile-card");
+      const audio = document.getElementById("audio-player");
+      const btn = document.getElementById("play-pause-button");
+      overlay.style.opacity = "0";
+      setTimeout(() => (overlay.style.display = "none"), 600);
+      profile.style.opacity = "1";
+      profile.style.transform = "translateY(0)";
       audio.play();
       btn.innerHTML = '<i class="fas fa-pause"></i>';
     }
 
-    const audio = document.getElementById('audio-player');
-    const bar = document.getElementById('progress-bar');
-    const current = document.getElementById('current-time');
-    const total = document.getElementById('total-duration');
-    const btn = document.getElementById('play-pause-button');
+    // Music controls
+    const audio = document.getElementById("audio-player");
+    const bar = document.getElementById("progress-bar");
+    const current = document.getElementById("current-time");
+    const total = document.getElementById("total-duration");
+    const btn = document.getElementById("play-pause-button");
 
-    audio.addEventListener('timeupdate', () => {
+    audio.addEventListener("timeupdate", () => {
       const val = (audio.currentTime / audio.duration) * 100;
       bar.value = val || 0;
       current.textContent = fmt(audio.currentTime);
       total.textContent = fmt(audio.duration);
     });
 
-    btn.addEventListener('click', () => {
+    btn.addEventListener("click", () => {
       if (audio.paused) {
         audio.play();
         btn.innerHTML = '<i class="fas fa-pause"></i>';
@@ -329,30 +274,67 @@
     function fmt(s) {
       const m = Math.floor(s / 60);
       const sec = Math.floor(s % 60);
-      return `${m}:${sec < 10 ? '0' : ''}${sec}`;
+      return `${m}:${sec < 10 ? "0" : ""}${sec}`;
     }
 
-    fetch('https://api.lanyard.rest/v1/users/630062323448676352')
-      .then(r => r.json())
-      .then(data => {
-        const d = data.data;
-        const img = document.querySelector('.profile-img img');
-        const user = d.discord_user;
-        const tooltip = document.getElementById('usernameTooltip');
-        tooltip.textContent = user.username;
+    // Chaotic wave randomizer
+    const body = document.body;
+    function randomPos() {
+      const rand = () => Math.floor(Math.random() * 100);
+      body.style.setProperty(
+        "--wavePos",
+        `${rand()}% ${rand()}%, ${rand()}% ${rand()}%, ${rand()}% ${rand()}%, ${rand()}% ${rand()}%, ${rand()}% ${rand()}%`
+      );
+      body.style.setProperty(
+        "background-position",
+        `${rand()}% ${rand()}%, ${rand()}% ${rand()}%, ${rand()}% ${rand()}%`
+      );
+      const before = body.querySelector("::before");
+    }
 
+    // real random movement by editing style string
+    const bg = document.querySelector("body::before");
+    const style = document.styleSheets[0].cssRules;
+    // simulate subtle chaos update
+    setInterval(() => {
+      const before = document.querySelector("body::before");
+      const x1 = Math.floor(Math.random() * 100);
+      const y1 = Math.floor(Math.random() * 100);
+      const x2 = Math.floor(Math.random() * 100);
+      const y2 = Math.floor(Math.random() * 100);
+      const el = document.body;
+      el.style.setProperty("--x1", x1 + "% " + y1 + "%");
+      el.style.setProperty("--x2", x2 + "% " + y2 + "%");
+      // update directly
+      el.style.setProperty(
+        "background-position",
+        `${x1}% ${y1}%, ${x2}% ${y2}%, 50% 50%`
+      );
+      document.body.style.setProperty(
+        "filter",
+        `brightness(${0.95 + Math.random() * 0.1})`
+      );
+    }, 4000);
+
+    // Fetch Discord data
+    fetch("https://api.lanyard.rest/v1/users/630062323448676352")
+      .then((r) => r.json())
+      .then((data) => {
+        const d = data.data;
+        const img = document.querySelector(".profile-img img");
+        const user = d.discord_user;
         const color =
-          d.discord_status === 'online'
-            ? '#5d9c58'
-            : d.discord_status === 'idle'
-            ? '#e2b248'
-            : d.discord_status === 'dnd'
-            ? '#e85167'
-            : '#404040';
+          d.discord_status === "online"
+            ? "#5d9c58"
+            : d.discord_status === "idle"
+            ? "#e2b248"
+            : d.discord_status === "dnd"
+            ? "#e85167"
+            : "#404040";
         img.style.border = `3px solid ${color}`;
         img.src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
       })
-      .catch(e => console.error(e));
+      .catch((e) => console.error(e));
   </script>
 </body>
 </html>
