@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>xiaocia</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --fg: #d1d1d1;
+      --muted: #aaa;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Poppins', sans-serif;
+      color: var(--fg);
+      margin: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* --- wave gradient background --- */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 20% 20%, rgba(255, 80, 80, 0.25) 0%, transparent 60%),
+                  radial-gradient(circle at 80% 30%, rgba(80, 120, 255, 0.25) 0%, transparent 60%),
+                  radial-gradient(circle at 40% 80%, rgba(0, 0, 0, 0.8) 0%, rgba(0,0,0,0.9) 70%);
+      background-blend-mode: screen;
+      animation: waveMove 60s ease-in-out infinite alternate;
+      z-index: -2;
+    }
+
+    /* --- frosted sand-glass overlay --- */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      backdrop-filter: blur(20px);
+      background-image:
+        url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQI12NggA8YDwAD0wGjHTzKZwAAAABJRU5ErkJggg=="),
+        linear-gradient(rgba(255,255,255,0.02), rgba(0,0,0,0.03));
+      background-repeat: repeat;
+      opacity: 0.45;
+      z-index: -1;
+    }
+
+    @keyframes waveMove {
+      0% {
+        background-position: 0% 0%, 100% 0%, 50% 100%;
+      }
+      50% {
+        background-position: 50% 80%, 30% 50%, 80% 20%;
+      }
+      100% {
+        background-position: 100% 0%, 0% 100%, 20% 50%;
+      }
+    }
+
+    /* Overlay intro */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(12px);
+      z-index: 999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.6s ease;
+    }
+
+    .overlay-text {
+      font-size: 2.2rem;
+      font-weight: 600;
+      color: var(--fg);
+      text-align: center;
+      user-select: none;
+    }
+
+    /* Profile card */
+    .profile-card {
+      backdrop-filter: blur(8px);
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      border: 1px solid #888;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      max-width: 400px;
+      width: 100%;
+      margin: auto;
+      opacity: 0;
+      transform: translateY(-40px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .profile-img img {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+      object-fit: cover;
+      transition: border-color 0.3s ease;
+    }
+
+    .profile-info h2 {
+      font-size: 1.8rem;
+      margin: 8px 0 4px;
+      color: #fff;
+    }
+    .profile-info p {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    /* Social icons */
+    .social-icons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 0;
+      margin: 12px 0 6px;
+      list-style: none;
+    }
+    .social-icons a {
+      color: #fff;
+      font-size: 22px;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid #fff;
+      border-radius: 50%;
+      transition: all 0.25s ease;
+    }
+    .social-icons a:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .tooltip {
+      position: relative;
+    }
+    .tooltiptext {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      top: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #444;
+      border: 1px solid #777;
+      color: #fff;
+      font-size: 12px;
+      border-radius: 4px;
+      padding: 2px 6px;
+      white-space: nowrap;
+      transition: opacity 0.3s;
+    }
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* Music player */
+    .music-player {
+      margin-top: 20px;
+      border-top: 1px solid #444;
+      padding-top: 18px;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .controls button {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #fff;
+      cursor: pointer;
+      transition: opacity 0.25s;
+    }
+    .controls button:hover {
+      opacity: 0.7;
+    }
+    .progress-bar {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+    }
+    .progress-bar input[type='range'] {
+      width: 100%;
+      height: 4px;
+      background: #555;
+      border-radius: 2px;
+      appearance: none;
+      outline: none;
+      cursor: pointer;
+    }
+    .progress-bar input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #fff;
+      transition: background-color 0.2s;
+    }
+    .progress-bar input:hover::-webkit-slider-thumb {
+      background-color: #ccc;
+    }
+    #duration-info {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    @media (max-width: 600px) {
+      .profile-card { max-width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="overlay" class="overlay" onclick="handleOverlayClick()">
+    <div class="overlay-text">あ!</div>
+  </div>
+
+  <div class="profile-card" id="profile-card">
+    <div class="profile-img"><img src="" alt="avatar" /></div>
+    <div class="profile-info">
+      <h2>ハロー！</h2>
+      <p>なまえは しあおしあ です、<br />はじめまして。(ᗜˬᗜ)</p>
+    </div>
+
+    <ul class="social-icons">
+      <li>
+        <a href="https://discordapp.com/users/630062323448676352" class="tooltip">
+          <span class="tooltiptext" id="usernameTooltip"></span>
+          <i class="fab fa-discord"></i>
+        </a>
+      </li>
+      <li>
+        <a href="https://instagram.com/xiaocia" class="tooltip">
+          <span class="tooltiptext">xiaocia</span>
+          <i class="fab fa-instagram"></i>
+        </a>
+      </li>
+      <li>
+        <a href="https://fb.com/oo0.UwU.0oo" class="tooltip">
+          <span class="tooltiptext">Mafy</span>
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a href="https://wa.me/33525330188?text=.menu" class="tooltip">
+          <span class="tooltiptext">My Bot</span>
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    </ul>
+
+    <div class="music-player">
+      <audio id="audio-player">
+        <source src="ArcaneTheBridge.mp3" type="audio/mpeg" />
+      </audio>
+      <div class="controls">
+        <button id="play-pause-button"><i class="fas fa-play"></i></button>
+        <div class="progress-bar"><input type="range" min="0" max="100" value="0" step="0.1" id="progress-bar" /></div>
+      </div>
+      <div id="duration-info"><span id="current-time">0:00</span> / <span id="total-duration">0:00</span></div>
+    </div>
+  </div>
+
+  <script>
+    function handleOverlayClick() {
+      const overlay = document.getElementById('overlay');
+      const profile = document.getElementById('profile-card');
+      const audio = document.getElementById('audio-player');
+      const btn = document.getElementById('play-pause-button');
+
+      overlay.style.opacity = '0';
+      setTimeout(() => (overlay.style.display = 'none'), 600);
+
+      profile.style.opacity = '1';
+      profile.style.transform = 'translateY(0)';
+      audio.play();
+      btn.innerHTML = '<i class="fas fa-pause"></i>';
+    }
+
+    const audio = document.getElementById('audio-player');
+    const bar = document.getElementById('progress-bar');
+    const current = document.getElementById('current-time');
+    const total = document.getElementById('total-duration');
+    const btn = document.getElementById('play-pause-button');
+
+    audio.addEventListener('timeupdate', () => {
+      const val = (audio.currentTime / audio.duration) * 100;
+      bar.value = val || 0;
+      current.textContent = fmt(audio.currentTime);
+      total.textContent = fmt(audio.duration);
+    });
+
+    btn.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+        btn.innerHTML = '<i class="fas fa-pause"></i>';
+      } else {
+        audio.pause();
+        btn.innerHTML = '<i class="fas fa-play"></i>';
+      }
+    });
+
+    function fmt(s) {
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${m}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+
+    fetch('https://api.lanyard.rest/v1/users/630062323448676352')
+      .then(r => r.json())
+      .then(data => {
+        const d = data.data;
+        const img = document.querySelector('.profile-img img');
+        const user = d.discord_user;
+        const tooltip = document.getElementById('usernameTooltip');
+        tooltip.textContent = user.username;
+
+        const color =
+          d.discord_status === 'online'
+            ? '#5d9c58'
+            : d.discord_status === 'idle'
+            ? '#e2b248'
+            : d.discord_status === 'dnd'
+            ? '#e85167'
+            : '#404040';
+        img.style.border = `3px solid ${color}`;
+        img.src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+      })
+      .catch(e => console.error(e));
+  </script>
+</body>
+</html>
