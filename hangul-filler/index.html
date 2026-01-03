@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>U+3164</title>
+<style>
+  :root{ color-scheme:dark; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    padding:18px;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.07), transparent 55%),
+      radial-gradient(900px 500px at 12% 92%, rgba(255,255,255,.05), transparent 60%),
+      radial-gradient(700px 420px at 88% 80%, rgba(255,255,255,.035), transparent 60%),
+      #0b0b0c;
+    color:#e7e7ea;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  /* Subtle noise overlay (Apple-ish) */
+  body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    opacity:.22;
+    mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+  }
+
+  /* Soft vignette */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background:radial-gradient(circle at 50% 45%, transparent 40%, rgba(0,0,0,.55) 100%);
+  }
+
+  .term{
+    width:min(560px, 92vw);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:14px;
+    background:#0f1012;
+    box-shadow: 0 18px 70px rgba(0,0,0,.60);
+    overflow:hidden;
+    position:relative;
+  }
+
+  /* subtle glow behind terminal */
+  .term::before{
+    content:"";
+    position:absolute;
+    inset:-60px;
+    background:radial-gradient(circle at 50% 35%, rgba(255,255,255,.08), transparent 60%);
+    filter:blur(46px);
+    z-index:-1;
+  }
+
+  .bar{
+    height:34px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 12px;
+    background:linear-gradient(#1a1b1f, #14151a);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    user-select:none;
+  }
+
+  .dots{display:flex; gap:8px; align-items:center}
+  .dot{width:12px; height:12px; border-radius:50%;}
+  .red{background:#ff5f56}
+  .yellow{background:#ffbd2e}
+  .green{background:#27c93f}
+
+  .title{
+    font-size:12px;
+    opacity:.78;
+    letter-spacing:.1px;
+  }
+
+  .body{
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .line{
+    font-size:12px;
+    opacity:.78;
+  }
+
+  .row{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+
+  input{
+    flex:1 1 220px;
+    padding:10px 12px;
+    font-size:18px;
+    text-align:center;
+    background:#0b0c0f;
+    color:#e7e7ea;
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:10px;
+    outline:none;
+  }
+
+  button{
+    padding:10px 14px;
+    background:#0b0c0f;
+    color:#e7e7ea;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:10px;
+    font-weight:800;
+    cursor:pointer;
+  }
+  button:active{ transform:scale(.98); }
+
+  .toast{
+    font-size:12px;
+    opacity:0;
+    transform:translateY(-2px);
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  .toast.show{
+    opacity:.85;
+    transform:translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="term">
+  <div class="bar">
+    <div class="dots">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+    </div>
+    <div class="title">U+3164 · Hangul Filler</div>
+  </div>
+
+  <div class="body">
+    <div class="line">$ copy U+3164</div>
+
+    <div class="row">
+      <input id="v" value="ㅤ" readonly />
+      <button id="btn">Copy</button>
+    </div>
+
+    <div class="toast" id="t">Copied</div>
+  </div>
+</div>
+
+<script>
+  const v = document.getElementById("v");
+  const t = document.getElementById("t");
+  const btn = document.getElementById("btn");
+
+  async function copyText(text){
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+    v.focus();
+    v.select();
+    v.setSelectionRange(0, v.value.length);
+    return document.execCommand("copy");
+  }
+
+  btn.addEventListener("click", async () => {
+    try{
+      await copyText(v.value);
+      t.textContent = "Copied ✓";
+      t.classList.add("show");
+      setTimeout(()=>t.classList.remove("show"), 900);
+    }catch(e){}
+  });
+</script>
+
+</body>
+</html>
