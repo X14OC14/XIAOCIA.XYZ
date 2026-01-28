@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>xiaocia</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --text: #e9e9ee;
+      --muted: rgba(255, 255, 255, .82);
+      --stroke: rgba(255, 255, 255, .16);
+      --card: rgba(16, 16, 20, .55);
+
+      --neon: #ff3b8e;
+      --neon2: #33d1ff;
+
+      --good: #5d9c58;
+      --idle: #e2b248;
+      --dnd: #e85167;
+      --off: #404040;
+
+      --radius: 16px;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .55);
+    }
+
+    /* =========================================================
+       NO BLUE OVERLAY / NO TAP HIGHLIGHT / NO FOCUS RINGS
+       (Android Chrome classic problem)
+       ========================================================= */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+    }
+
+    a,
+    button,
+    input,
+    textarea,
+    select,
+    [role="button"] {
+      outline: none !important;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-appearance: none;
+      appearance: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-focus-ring-color: transparent;
+    }
+
+    a:focus,
+    button:focus,
+    input:focus,
+    textarea:focus,
+    select:focus,
+    a:active,
+    button:active,
+    input:active,
+    textarea:active,
+    select:active {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    /* If browser uses :focus-visible, kill it too */
+    :focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Stop selection highlight */
+    ::selection {
+      background: transparent;
+    }
+
+    /* ========================================================= */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 22px;
+      font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ===== Background layers ===== */
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: -6;
+      background:
+        radial-gradient(1200px 700px at 50% 35%, rgba(255, 59, 142, .10), transparent 60%),
+        radial-gradient(900px 600px at 62% 52%, rgba(51, 209, 255, .08), transparent 60%),
+        #07080b;
+    }
+
+    .bg-topo {
+      position: fixed;
+      inset: 0;
+      z-index: -5;
+      background-image: url("topo.svg");
+      background-size: cover;
+      opacity: .32;
+      filter: contrast(1.15) brightness(.9);
+    }
+
+    .bg-grain {
+      position: fixed;
+      inset: -40%;
+      z-index: -4;
+      pointer-events: none;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+      opacity: .08;
+      transform: rotate(8deg);
+      mix-blend-mode: overlay;
+    }
+
+    .bg-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      pointer-events: none;
+      background: radial-gradient(1200px 700px at 50% 25%, transparent 0 55%, rgba(0, 0, 0, .55) 80%);
+      opacity: .85;
+    }
+
+    /* ===== Overlay ===== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(14px);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .overlay-text {
+      font-size: 44px;
+      color: rgba(255, 255, 255, .90);
+      text-align: center;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-shadow: 0 0 18px rgba(255, 59, 142, .22);
+      animation: pop 1.4s infinite ease-in-out;
+    }
+
+    @keyframes pop {
+
+      0%,
+      100% {
+        transform: translateY(0);
+        opacity: .85;
+      }
+
+      50% {
+        transform: translateY(-6px);
+        opacity: 1;
+      }
+    }
+
+    /* ===== Card ===== */
+    .profile-card {
+      position: relative;
+      backdrop-filter: blur(10px);
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--stroke);
+      padding: 22px 20px 18px;
+      box-shadow: var(--shadow);
+      text-align: center;
+      width: min(420px, 100%);
+      overflow: hidden;
+
+      opacity: 0;
+      transform: translateY(-45px) scale(.985);
+    }
+
+    .profile-card::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: calc(var(--radius) + 1px);
+      background:
+        radial-gradient(520px 160px at 50% 0%, rgba(255, 59, 142, .18), transparent 60%),
+        radial-gradient(520px 160px at 50% 100%, rgba(51, 209, 255, .14), transparent 60%);
+      pointer-events: none;
+      opacity: .85;
+    }
+
+    .profile-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(900px 360px at 50% 20%, transparent 0 55%, rgba(0, 0, 0, .40) 75%);
+      opacity: 1;
+    }
+
+    /* ===== Glitch stack ===== */
+    .glitch-layer,
+    .scanlines,
+    .glitch-blocks {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .scanlines {
+      opacity: .18;
+      background: repeating-linear-gradient(180deg,
+          rgba(255, 255, 255, .05) 0px,
+          rgba(255, 255, 255, .05) 1px,
+          transparent 2px,
+          transparent 6px);
+      mix-blend-mode: overlay;
+    }
+
+    .glitch-layer {
+      opacity: 0;
+      background:
+        linear-gradient(90deg, transparent 0 35%, rgba(255, 59, 142, .20) 50%, transparent 65%),
+        linear-gradient(90deg, transparent 0 60%, rgba(51, 209, 255, .16) 70%, transparent 80%),
+        radial-gradient(700px 220px at 50% 40%, rgba(255, 255, 255, .06), transparent 60%);
+      mix-blend-mode: screen;
+      filter: blur(.25px);
+      animation: glitchFlash 4.6s infinite;
+    }
+
+    @keyframes glitchFlash {
+
+      0%,
+      58%,
+      100% {
+        opacity: 0;
+        transform: translateX(0);
+      }
+
+      63% {
+        opacity: .32;
+        transform: translateX(7px);
+      }
+
+      65% {
+        opacity: .10;
+        transform: translateX(-5px);
+      }
+
+      66.5% {
+        opacity: .26;
+        transform: translateX(3px);
+      }
+
+      68% {
+        opacity: 0;
+        transform: translateX(0);
+      }
+    }
+
+    .glitch-blocks {
+      opacity: 0;
+      background:
+        linear-gradient(90deg, rgba(255, 59, 142, .16) 0 20%, transparent 20% 100%),
+        linear-gradient(90deg, transparent 0 55%, rgba(51, 209, 255, .12) 55% 70%, transparent 70% 100%);
+      mix-blend-mode: screen;
+      animation: blocks 6.2s infinite;
+      transform: translateZ(0);
+    }
+
+    @keyframes blocks {
+
+      0%,
+      66%,
+      100% {
+        opacity: 0;
+        clip-path: inset(0 0 0 0);
+        transform: translateX(0);
+      }
+
+      69% {
+        opacity: .22;
+        clip-path: inset(10% 0 70% 0);
+        transform: translateX(-6px);
+      }
+
+      70.5% {
+        opacity: .18;
+        clip-path: inset(55% 0 25% 0);
+        transform: translateX(8px);
+      }
+
+      72% {
+        opacity: .12;
+        clip-path: inset(30% 0 45% 0);
+        transform: translateX(-4px);
+      }
+
+      73% {
+        opacity: 0;
+        clip-path: inset(0 0 0 0);
+        transform: translateX(0);
+      }
+    }
+
+    /* ===== Avatar ring (ngepas) ===== */
+    .avatar-wrap {
+      position: relative;
+      width: 110px;
+      height: 110px;
+      margin: 6px auto 10px;
+      display: grid;
+      place-items: center;
+      z-index: 2;
+    }
+
+    .ring {
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      background: transparent;
+      border: 2px solid rgba(255, 255, 255, .55);
+      box-shadow: 0 0 16px rgba(255, 255, 255, .06);
+      opacity: .95;
+    }
+
+    .profile-img img {
+      width: 104px;
+      height: 104px;
+      border-radius: 50%;
+      border: 0;
+      object-fit: cover;
+      background: rgba(255, 255, 255, .05);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, .45);
+      position: relative;
+      z-index: 3;
+      transition: transform .25s ease, filter .25s ease;
+    }
+
+    .profile-img img:hover {
+      transform: scale(1.02);
+      filter: drop-shadow(1px 0 0 rgba(51, 209, 255, .26)) drop-shadow(-1px 0 0 rgba(255, 59, 142, .20));
+    }
+
+    .profile-info {
+      position: relative;
+      z-index: 2;
+      margin-top: 4px;
+    }
+
+    .profile-info h2 {
+      font-weight: 800;
+      font-size: 2.2rem;
+      color: #fff;
+      margin: 2px 0 6px;
+      position: relative;
+      display: inline-block;
+      text-shadow: 0 0 18px rgba(255, 59, 142, .10);
+    }
+
+    .profile-info h2::before,
+    .profile-info h2::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: .0;
+    }
+
+    .profile-info h2::before {
+      color: rgba(51, 209, 255, .85);
+      clip-path: inset(0 0 55% 0);
+    }
+
+    .profile-info h2::after {
+      color: rgba(255, 59, 142, .75);
+      clip-path: inset(55% 0 0 0);
+    }
+
+    .profile-card.glitch-on .profile-info h2::before {
+      opacity: .55;
+      transform: translate(2px, -1px);
+    }
+
+    .profile-card.glitch-on .profile-info h2::after {
+      opacity: .45;
+      transform: translate(-2px, 1px);
+    }
+
+    .profile-info p {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, .86);
+      line-height: 1.55rem;
+      margin: 0;
+      font-weight: 400;
+    }
+
+    /* ===== Social icons ===== */
+    .social-icons {
+      position: relative;
+      z-index: 2;
+      list-style: none;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 16px 0 6px;
+    }
+
+    .social-icons li {
+      display: flex;
+    }
+
+    .social-icons a {
+      text-decoration: none;
+      color: rgba(255, 255, 255, .92);
+      width: 54px;
+      height: 54px;
+      border-radius: 999px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+      font-size: 24px;
+      border: 1px solid rgba(255, 255, 255, .42);
+      background: rgba(0, 0, 0, .20);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .social-icons a::after {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background: radial-gradient(circle, rgba(255, 59, 142, .22), transparent 55%);
+      opacity: 0;
+      transition: opacity .2s ease;
+    }
+
+    .social-icons a:hover {
+      transform: translateY(-2px) scale(1.02);
+      border-color: rgba(255, 59, 142, .65);
+      background: rgba(0, 0, 0, .28);
+    }
+
+    .social-icons a:hover::after {
+      opacity: 1;
+    }
+
+    /* Tooltip */
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: auto;
+      background-color: rgba(0, 0, 0, .55);
+      color: #fff;
+      text-align: center;
+      border-radius: 10px;
+      padding: 4px 8px;
+      position: absolute;
+      z-index: 3;
+      top: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity .2s ease;
+      border: 1px solid rgba(255, 255, 255, .25);
+      font-size: 12px;
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+      box-shadow: 0 14px 35px rgba(0, 0, 0, .35);
+    }
+
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* ===== Music player ===== */
+    .music-player {
+      position: relative;
+      z-index: 2;
+      margin-top: 18px;
+      padding-top: 16px;
+      padding-bottom: 6px;
+      border-top: 1px solid rgba(255, 255, 255, .12);
+      width: 100%;
+    }
+
+    .music-player audio {
+      display: none;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+      gap: 10px;
+    }
+
+    .controls button {
+      width: 48px;
+      height: 48px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, .38);
+      background: rgba(0, 0, 0, .20);
+      cursor: pointer;
+      font-size: 18px;
+      color: rgba(255, 255, 255, .92);
+      display: grid;
+      place-items: center;
+      transition: transform .2s ease, border-color .2s ease;
+    }
+
+    .controls button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 59, 142, .65);
+    }
+
+    .progress-bar {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      margin: 0 6px;
+    }
+
+    .progress-bar input[type="range"] {
+      width: 100%;
+      height: 6px;
+      appearance: none;
+      background: rgba(255, 255, 255, .14);
+      border-radius: 999px;
+      outline: none;
+    }
+
+    .progress-bar input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .92);
+      border: 2px solid rgba(0, 0, 0, .35);
+      cursor: pointer;
+    }
+
+    .progress-bar input[type="range"]::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .92);
+      border: 2px solid rgba(0, 0, 0, .35);
+      cursor: pointer;
+    }
+
+    #duration-info {
+      margin-top: 8px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, .62);
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .profile-card {
+        width: calc(100% - 8px);
+      }
+    }
+
+    /* keep initial state */
+    #profile-card {
+      opacity: 0;
+      transform: translateY(-50px) scale(.985);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg"></div>
+  <div class="bg-topo"></div>
+  <div class="bg-grain"></div>
+  <div class="bg-vignette"></div>
+
+  <div id="overlay" class="overlay" onclick="handleOverlayClick()">
+    <div class="overlay-text">あ!</div>
+  </div>
+
+  <div class="profile-card" id="profile-card">
+    <div class="glitch-layer"></div>
+    <div class="glitch-blocks"></div>
+    <div class="scanlines"></div>
+
+    <div class="avatar-wrap">
+      <div class="ring" id="statusRing"></div>
+      <div class="profile-img">
+        <img class="user-avatar" id="avatar" src="" alt="">
+      </div>
+    </div>
+
+    <div class="profile-info">
+      <h2 data-text="ハロー！">ハロー！</h2>
+      <p>なまえは しあおしあ です、<br>はじめまして。( ᗜˬᗜ )</p>
+    </div>
+
+    <ul class="social-icons">
+      <li>
+        <a href="https://discordapp.com/users/630062323448676352" class="tooltip">
+          <span class="tooltiptext" id="usernameTooltip"></span>
+          <i class="fab fa-discord"></i>
+        </a>
+      </li>
+
+      <li>
+        <a href="https://instagram.com/xiaocia" class="tooltip">
+          <span class="tooltiptext">xiaocia</span>
+          <i class="fab fa-instagram"></i>
+        </a>
+      </li>
+
+      <li>
+        <a href="https://fb.com/oo0.UwU.0oo" class="tooltip">
+          <span class="tooltiptext">Mafy</span>
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+
+      <li>
+        <a href="https://wa.me/33525330188?text=.menu" class="tooltip">
+          <span class="tooltiptext">My Bot</span>
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    </ul>
+
+    <div class="music-player">
+      <audio controls id="audio-player">
+        <source src="ArcaneTheBridge.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+      </audio>
+
+      <div class="controls">
+        <button onclick="togglePlayPause()" id="play-pause-button" type="button">
+          <i class="fas fa-play"></i>
+        </button>
+
+        <div class="progress-bar">
+          <input type="range" min="0" max="100" value="0" step="0.1" id="progress-bar">
+        </div>
+      </div>
+
+      <div id="duration-info">
+        <span id="current-time">0:00</span> / <span id="total-duration">0:00</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const profileCardEl = document.getElementById('profile-card');
+
+    // HARD KILL focus after tap/click everywhere (prevents blue focus overlay)
+    function killFocus(e) {
+      const el = e.target.closest('a,button,input,[role="button"]');
+      if (el) el.blur();
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    }
+    document.addEventListener('mouseup', killFocus, { passive: true });
+    document.addEventListener('touchend', killFocus, { passive: true });
+    document.addEventListener('pointerup', killFocus, { passive: true });
+
+    function handleOverlayClick() {
+      var overlay = document.getElementById('overlay');
+      var profileCard = document.getElementById('profile-card');
+      var audioPlayer = document.getElementById('audio-player');
+      var playPauseButton = document.getElementById('play-pause-button');
+
+      overlay.style.transition = 'opacity 0.5s';
+      overlay.style.opacity = '0';
+      setTimeout(function () {
+        overlay.style.display = 'none';
+      }, 500);
+
+      profileCard.style.transition = 'opacity 0.55s ease, transform 0.55s ease';
+      profileCard.style.opacity = '1';
+      profileCard.style.transform = 'translateY(0) scale(1)';
+
+      audioPlayer.play().then(() => {
+        playPauseButton.innerHTML = '<i class="fas fa-pause"></i>';
+      }).catch(() => {
+        // autoplay bisa diblok browser
+      });
+    }
+
+    function updateProgressBar() {
+      var mediaPlayer = document.querySelector('audio');
+      var progressBar = document.getElementById('progress-bar');
+      if (!mediaPlayer.duration) return;
+
+      var value = (mediaPlayer.currentTime / mediaPlayer.duration) * 100;
+      progressBar.value = value;
+
+      var currentTime = formatTime(mediaPlayer.currentTime);
+      var totalTime = formatTime(mediaPlayer.duration);
+      document.getElementById('current-time').textContent = currentTime;
+      document.getElementById('total-duration').textContent = totalTime;
+    }
+
+    document.querySelector('audio').addEventListener('timeupdate', updateProgressBar);
+    document.querySelector('audio').addEventListener('loadedmetadata', updateProgressBar);
+
+    // seek enable (kalau mau disable, hapus listener ini)
+    document.getElementById('progress-bar').addEventListener('input', function () {
+      var mediaPlayer = document.querySelector('audio');
+      if (!mediaPlayer.duration) return;
+      mediaPlayer.currentTime = (this.value / 100) * mediaPlayer.duration;
+    });
+
+    function togglePlayPause() {
+      var mediaPlayer = document.querySelector('audio');
+      var playPauseButton = document.getElementById('play-pause-button');
+
+      if (mediaPlayer.paused) {
+        mediaPlayer.play();
+        playPauseButton.innerHTML = '<i class="fas fa-pause"></i>';
+      } else {
+        mediaPlayer.pause();
+        playPauseButton.innerHTML = '<i class="fas fa-play"></i>';
+      }
+    }
+
+    function formatTime(timeInSeconds) {
+      if (!Number.isFinite(timeInSeconds)) return "0:00";
+      var minutes = Math.floor(timeInSeconds / 60);
+      var seconds = Math.floor(timeInSeconds % 60);
+      return minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+    }
+
+    // glitch pulse stronger feel (visual only)
+    function pulseGlitch() {
+      profileCardEl.classList.add('glitch-on');
+      setTimeout(() => profileCardEl.classList.remove('glitch-on'), 180);
+      const next = 1800 + Math.random() * 3200;
+      setTimeout(pulseGlitch, next);
+    }
+    pulseGlitch();
+
+    // Lanyard fetch + ring status
+    fetch('https://api.lanyard.rest/v1/users/630062323448676352')
+      .then(response => response.json())
+      .then(data => {
+        const discordStatus = data.data.discord_status;
+        const username = data.data.discord_user.username;
+
+        const tooltip = document.getElementById('usernameTooltip');
+        tooltip.textContent = username;
+
+        const userId = data.data.discord_user.id;
+        const avatarHash = data.data.discord_user.avatar;
+        const avatarUrl = `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.png`;
+
+        const profileImg = document.getElementById('avatar');
+        profileImg.src = avatarUrl;
+
+        const ring = document.getElementById('statusRing');
+        let color = getComputedStyle(document.documentElement).getPropertyValue('--off').trim();
+        if (discordStatus === 'online') color = getComputedStyle(document.documentElement).getPropertyValue('--good').trim();
+        else if (discordStatus === 'idle') color = getComputedStyle(document.documentElement).getPropertyValue('--idle').trim();
+        else if (discordStatus === 'dnd') color = getComputedStyle(document.documentElement).getPropertyValue('--dnd').trim();
+
+        ring.style.border = `2px solid ${color}`;
+        ring.style.boxShadow = `0 0 18px ${color}30`;
+      })
+      .catch(error => console.error('Error fetching data:', error));
+  </script>
+
+</body>
+
+</html>
