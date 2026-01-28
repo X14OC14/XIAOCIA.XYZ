@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>xiaocia // live</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #030303;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #ffffff;
+            --text-gray: #888888;
+            --accent: #ff3b8e;
+            --spotify: #1DB954;
+            --radius: 24px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* --- DYNAMIC AURORA BACKGROUND --- */
+        .aurora-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2;
+            background: 
+                radial-gradient(circle at 0% 0%, rgba(255, 59, 142, 0.15), transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(51, 209, 255, 0.15), transparent 40%);
+            filter: blur(80px);
+            animation: breathe 10s ease-in-out infinite alternate;
+        }
+
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+            opacity: 0.5;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        }
+
+        @keyframes breathe {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.1); opacity: 1; }
+        }
+
+        /* --- THE CARD --- */
+        .card {
+            width: 360px;
+            background: rgba(10, 10, 12, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 30px;
+            position: relative;
+            transform-style: preserve-3d;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            opacity: 0; 
+            animation: fadeInUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            transform: translateZ(20px);
+        }
+
+        .avatar-wrapper {
+            position: relative;
+        }
+
+        .avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .status-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #555;
+            border: 3px solid var(--bg);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .user-info h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .user-info span {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* --- BADGES / TAGS --- */
+        .badges {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        
+        .badge {
+            font-size: 0.65rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.05);
+            color: #aaa;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* --- ACTIVITY BOX (The Star Show) --- */
+        .activity-box {
+            margin: 0 -10px 24px;
+            padding: 16px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.04);
+            display: none; /* Hidden by default */
+            align-items: center;
+            gap: 14px;
+            transform: translateZ(30px);
+            transition: all 0.3s ease;
+        }
+
+        .activity-box.active {
+            display: flex;
+            background: linear-gradient(90deg, rgba(29, 185, 84, 0.1), rgba(255,255,255,0.02));
+            border-color: rgba(29, 185, 84, 0.2);
+        }
+
+        .activity-img {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .activity-text {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .activity-header {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--spotify);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .song-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .artist-name {
+            font-size: 0.75rem;
+            color: var(--text-gray);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* --- MAIN BIO --- */
+        .bio-text {
+            font-size: 0.95rem;
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            font-weight: 300;
+            transform: translateZ(10px);
+        }
+
+        /* --- LINKS --- */
+        .links {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            transform: translateZ(25px);
+        }
+
+        .link-btn {
+            height: 50px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1.2rem;
+            border: 1px solid transparent;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .link-btn:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-4px);
+            border-color: rgba(255,255,255,0.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .link-btn:hover .fa-discord { color: #5865F2; }
+        .link-btn:hover .fa-instagram { color: #E1306C; }
+        .link-btn:hover .fa-facebook { color: #1877F2; }
+        .link-btn:hover .fa-whatsapp { color: #25D366; }
+
+        /* --- ANIMATION --- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Equalizer Animation (Visual flair) */
+        .equalizer {
+            display: flex;
+            gap: 2px;
+            height: 10px;
+            align-items: flex-end;
+        }
+        .bar {
+            width: 2px;
+            background: var(--spotify);
+            animation: eq 1s infinite ease-in-out;
+        }
+        .bar:nth-child(2) { animation-delay: 0.2s; }
+        .bar:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes eq {
+            0%, 100% { height: 2px; }
+            50% { height: 10px; }
+        }
+        
+        @media (max-width: 480px) {
+            .card { width: 90%; padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="aurora-bg"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="card" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+        
+        <div class="card-header">
+            <div class="avatar-wrapper">
+                <img src="https://ui-avatars.com/api/?name=X&background=0b0b0b&color=fff" alt="Avatar" class="avatar" id="avatar">
+                <div class="status-indicator" id="statusDot"></div>
+            </div>
+            <div class="user-info">
+                <h1 id="displayName">Xiaocia</h1>
+                <span id="username">@loading...</span>
+                <div class="badges">
+                    <div class="badge">DEV</div>
+                    <div class="badge">IDN</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="activity-box" id="activityBox">
+            <img src="" alt="Album Art" class="activity-img" id="activityImage">
+            <div class="activity-text">
+                <div class="activity-header">
+                    <div class="equalizer">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                    <span id="activityType">LISTENING TO SPOTIFY</span>
+                </div>
+                <div class="song-title" id="activityMain">Unknown Song</div>
+                <div class="artist-name" id="activitySub">Unknown Artist</div>
+            </div>
+        </div>
+
+        <p class="bio-text">
+            Front-end enthusiast & digital explorer.<br>
+            Creating aesthetics from chaos. ( ᗜˬᗜ )
+        </p>
+
+        <div class="links">
+            <a href="https://discordapp.com/users/630062323448676352" target="_blank" class="link-btn"><i class="fab fa-discord"></i></a>
+            <a href="https://instagram.com/xiaocia" target="_blank" class="link-btn"><i class="fab fa-instagram"></i></a>
+            <a href="https://fb.com/oo0.UwU.0oo" target="_blank" class="link-btn"><i class="fab fa-facebook"></i></a>
+            <a href="https://wa.me/33525330188" target="_blank" class="link-btn"><i class="fab fa-whatsapp"></i></a>
+        </div>
+    </div>
+
+    <script>
+        const DISCORD_ID = '630062323448676352';
+        
+        // Element References
+        const avatarEl = document.getElementById('avatar');
+        const usernameEl = document.getElementById('username');
+        const statusDot = document.getElementById('statusDot');
+        const activityBox = document.getElementById('activityBox');
+        const activityImage = document.getElementById('activityImage');
+        const activityType = document.getElementById('activityType');
+        const activityMain = document.getElementById('activityMain');
+        const activitySub = document.getElementById('activitySub');
+
+        async function updateLanyard() {
+            try {
+                const res = await fetch(`https://api.lanyard.rest/v1/users/${DISCORD_ID}`);
+                const data = await res.json();
+                
+                if (!data.success) return;
+
+                const { discord_user, discord_status, activities, spotify } = data.data;
+
+                // 1. Basic Profile Info
+                usernameEl.textContent = `@${discord_user.username}`;
+                avatarEl.src = `https://cdn.discordapp.com/avatars/${discord_user.id}/${discord_user.avatar}.png?size=256`;
+
+                // 2. Status Color
+                const colors = {
+                    online: '#4ade80',
+                    idle: '#fbbf24',
+                    dnd: '#f87171',
+                    offline: '#52525b'
+                };
+                statusDot.style.background = colors[discord_status] || colors.offline;
+
+                // 3. Activity Logic (Spotify > Game > None)
+                let hasActivity = false;
+
+                // Check Spotify First (Priority)
+                if (spotify) {
+                    hasActivity = true;
+                    activityBox.style.display = 'flex';
+                    activityBox.classList.add('active');
+                    
+                    // Update UI for Spotify
+                    activityImage.src = spotify.album_art_url;
+                    activityType.textContent = "LISTENING TO SPOTIFY";
+                    activityType.style.color = "#1DB954"; // Spotify Green
+                    activityMain.textContent = spotify.song;
+                    activitySub.textContent = spotify.artist;
+                    
+                } else {
+                    // Check for Games/VSCode if not Spotify
+                    const game = activities.find(a => a.type === 0); // Type 0 is "Playing"
+                    
+                    if (game) {
+                        hasActivity = true;
+                        activityBox.style.display = 'flex';
+                        activityBox.classList.remove('active'); // Remove green tint
+                        activityBox.style.borderColor = "rgba(255,255,255,0.1)";
+                        
+                        // Try to get game image (Large Image > Application Icon > Default)
+                        let imageUrl = 'https://i.imgur.com/3QjqZ3p.png'; // Fallback controller icon
+                        if (game.assets && game.assets.large_image) {
+                             if(game.assets.large_image.startsWith("mp:")){
+                                imageUrl = `https://media.discordapp.net/${game.assets.large_image.replace("mp:", "")}`;
+                             } else {
+                                imageUrl = `https://cdn.discordapp.com/app-assets/${game.application_id}/${game.assets.large_image}.png`;
+                             }
+                        }
+
+                        activityImage.src = imageUrl;
+                        activityType.textContent = "PLAYING";
+                        activityType.style.color = "#33d1ff"; // Blue for games
+                        activityMain.textContent = game.name;
+                        activitySub.textContent = game.details || game.state || "In Game";
+
+                    } else {
+                        // No activity
+                        activityBox.style.display = 'none';
+                    }
+                }
+
+            } catch (err) {
+                console.error("Lanyard Error:", err);
+            }
+        }
+
+        // Initialize Tilt (Refined Settings)
+        VanillaTilt.init(document.querySelector(".card"), {
+            max: 8,              // Sedikit rotasi saja biar elegan
+            speed: 400,          // Kecepatan respon
+            glare: true,         // Efek kilau
+            "max-glare": 0.15,   // Kilau jangan terlalu terang
+            scale: 1.02          // Sedikit zoom saat hover
+        });
+
+        // Loop update
+        updateLanyard();
+        setInterval(updateLanyard, 5000); // Check every 5s
+
+    </script>
+</body>
+</html>
