@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Roblox Text Texture</title>
+<style>
+  body {
+    margin: 0;
+    background: black;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const code = "RBX-1234-ABCD";
+
+// === TEXTURE IMAGE ===
+// bisa diganti dengan gambar lain
+const texture = new Image();
+texture.src = "https://i.ibb.co.com/JWdRV8Rr/Screenshot-20260215-212654.jpg";
+
+let pattern;
+
+texture.onload = () => {
+  pattern = ctx.createPattern(texture, "repeat");
+  animate();
+};
+
+function drawNoiseBackground() {
+  const img = ctx.createImageData(canvas.width, canvas.height);
+  const buf = img.data;
+
+  for (let i = 0; i < buf.length; i += 4) {
+    const val = 60 + Math.random() * 80;
+    buf[i] = val;
+    buf[i+1] = val;
+    buf[i+2] = val;
+    buf[i+3] = 255;
+  }
+
+  ctx.putImageData(img, 0, 0);
+}
+
+function drawText() {
+  ctx.save();
+
+  ctx.font = "bold 90px monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  if (pattern) {
+    ctx.fillStyle = pattern; // isi text pakai texture
+  } else {
+    ctx.fillStyle = "white";
+  }
+
+  ctx.fillText(code, canvas.width / 2, canvas.height / 2);
+
+  ctx.restore();
+}
+
+function animate() {
+  drawNoiseBackground();
+  drawText();
+  requestAnimationFrame(animate);
+}
+</script>
+
+</body>
+</html>
