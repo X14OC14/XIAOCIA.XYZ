@@ -2,7 +2,12 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Roblox Text Texture</title>
+<title>Robux Code</title>
+
+<!-- FAVICON -->
+<link rel="icon" type="image/png" sizes="256x256" href="https://i.ibb.co.com/Zz16K2tC/Tak-berjudul151-20260215215537.png">
+<link rel="apple-touch-icon" href="https://i.ibb.co.com/Zz16K2tC/Tak-berjudul151-20260215215537.png">
+
 <style>
   body {
     margin: 0;
@@ -26,8 +31,6 @@ canvas.height = window.innerHeight;
 
 const code = "RBX-1234-ABCD";
 
-// === TEXTURE IMAGE ===
-// bisa diganti dengan gambar lain
 const texture = new Image();
 texture.src = "https://i.ibb.co.com/JWdRV8Rr/Screenshot-20260215-212654.jpg";
 
@@ -61,7 +64,7 @@ function drawText() {
   ctx.textBaseline = "middle";
 
   if (pattern) {
-    ctx.fillStyle = pattern; // isi text pakai texture
+    ctx.fillStyle = pattern;
   } else {
     ctx.fillStyle = "white";
   }
