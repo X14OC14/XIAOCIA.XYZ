@@ -37,7 +37,7 @@
             position: relative;
         }
 
-        /* ANIMATED TOPO BACKGROUND */
+        /* OPTIMIZED ANIMATED TOPO BACKGROUND */
         body::before {
             content: "";
             position: fixed;
@@ -45,13 +45,22 @@
             z-index: -1;
             background: var(--electric);
             background-size: 400% 400%;
-            mask-image: url("topo.svg");
+            
             -webkit-mask-image: url("topo.svg");
-            mask-size: cover;
+            mask-image: url("topo.svg");
             -webkit-mask-size: cover;
+            mask-size: cover;
+            -webkit-mask-position: center;
             mask-position: center;
+
             opacity: 0.35;
-            animation: flowWave 12s ease infinite;
+
+            /* Hardware Acceleration to prevent lag during zoom/animation */
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            will-change: background-position;
+            
+            animation: flowWave 15s linear infinite;
         }
 
         @keyframes flowWave {
@@ -93,14 +102,14 @@
         .act-card { 
             background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border);
             border-radius: 16px; padding: 14px; display: flex; align-items: center; gap: 14px;
-            overflow: hidden; /* Tambahan biar gak nembus */
+            overflow: hidden;
         }
         
         .act-img { width: 55px; height: 55px; border-radius: 12px; object-fit: cover; background: #000; flex-shrink: 0; }
         
         .act-info { 
-            flex: 1; /* Biar dia ngambil sisa space */
-            min-width: 0; /* WAJIB biar text-overflow jalan di flexbox */
+            flex: 1;
+            min-width: 0; /* Prevents overflow in flexbox */
             overflow: hidden;
         }
 
@@ -108,7 +117,7 @@
             font-size: 0.9rem; color: #fff; margin: 0; 
             white-space: nowrap; 
             overflow: hidden; 
-            text-overflow: ellipsis; /* Biar jadi ... */
+            text-overflow: ellipsis;
         }
 
         .act-info p { 
