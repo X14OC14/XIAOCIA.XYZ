@@ -93,20 +93,15 @@
         }
 
         /* AVATAR SYSTEM */
-        .avatar-container { position: relative; width: 125px; height: 125px; margin: 0 auto 15px; z-index: 15; }
-        .user-avatar { 
-            width: 93px; height: 93px; border-radius: 50%; 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            z-index: 1; object-fit: cover;
-        }
-        .avatar-deco { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 2; pointer-events: none; }
+                .avatar-container { position: relative; width: 125px; height: 125px; margin: 0 auto 15px; }
+        .user-avatar { width: 105px; height: 105px; border-radius: 50%; position: absolute; top: 10px; left: 10px; z-index: 1; object-fit: cover; border: 0px solid transparent; }
+        .avatar-deco { width: 125px; height: 125px; position: absolute; top: 0; left: 0; z-index: 2; pointer-events: none; }
 
-        .badges-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; z-index: 15; position: relative;}
+        .badges-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; min-height: 24px; }
         .badge-icon { width: 22px; height: 22px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
 
-        .profile-info { position: relative; z-index: 15; }
-        .profile-info h2 { font-weight: 700; color: #fff; margin: 0; font-size: 2rem; letter-spacing: -1px; }
-        .profile-info p { font-size: 0.9rem; color: #ccc; margin: 10px 0 20px; line-height: 1.6; opacity: 0.8; }
+        .profile-info h2 { font-weight: 700; color: #fff; margin: 0; font-size: 1.9rem; letter-spacing: -0.5px; }
+        .profile-info p { font-size: 0.95rem; color: #999; margin: 10px 0 15px; line-height: 1.6; font-weight: 300; }
 
         /* STATUS LIST */
         .status-list {
