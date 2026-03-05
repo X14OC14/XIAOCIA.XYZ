@@ -3,11 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <title>XIAOCIA // LIVE</title>
+<style>
+html,body{
+margin:0;
+height:100%;
+}
+iframe{
+border:none;
+width:100%;
+height:100%;
+}
+</style>
 </head>
 
 <body>
 
-<div id="app"></div>
+<iframe id="app"></iframe>
 
 <script>
 const routes = {
@@ -23,11 +34,7 @@ if (!routes[path]) {
   path = "/";
 }
 
-fetch(routes[path])
-  .then(res => res.text())
-  .then(html => {
-    document.getElementById("app").innerHTML = html;
-  });
+document.getElementById("app").src = routes[path];
 </script>
 
 </body>
