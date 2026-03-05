@@ -34,7 +34,12 @@ if (!routes[path]) {
   path = "/";
 }
 
-document.getElementById("app").src = routes[path];
+const frame = document.getElementById("app");
+
+// cache busting otomatis
+const cacheBuster = "?v=" + Date.now();
+
+frame.src = routes[path] + cacheBuster;
 </script>
 
 </body>
