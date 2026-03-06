@@ -75,7 +75,6 @@
         .profile-info h2 { font-weight: 700; color: #fff; margin: 0; font-size: 2rem; letter-spacing: -0.8px; }
         .profile-info p { font-size: 0.9rem; color: #ccc; margin: 10px 0 25px; line-height: 1.6; opacity: 0.8; }
 
-        /* --- STATUS: single pill --- */
         .status-pill {
             display: inline-flex; align-items: center; gap: 7px;
             margin-bottom: 25px; padding: 7px 16px;
@@ -85,18 +84,12 @@
             position: relative; z-index: 15;
             transition: color 0.4s, border-color 0.4s;
         }
-        .status-dot {
-            width: 10px; height: 10px; border-radius: 50%;
-            background: currentColor; flex-shrink: 0;
-            transition: background 0.4s;
-        }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; flex-shrink: 0; transition: background 0.4s; }
         .status-pill.s-online  { color: var(--online);  border-color: rgba(35,165,90,0.25);  }
         .status-pill.s-idle    { color: var(--idle);    border-color: rgba(240,178,50,0.25); }
         .status-pill.s-dnd     { color: var(--dnd);     border-color: rgba(242,63,67,0.25);  }
         .status-pill.s-offline { color: var(--offline); border-color: rgba(128,132,142,0.25);}
-        /* idle: crescent shape */
         .status-pill.s-idle .status-dot { background: transparent; border-radius: 50%; box-shadow: inset -3.5px -2.5px 0 0 var(--idle); transform: rotate(-15deg); }
-        /* dnd: circle with bar */
         .status-pill.s-dnd .status-dot { display: flex; align-items: center; justify-content: center; background: var(--dnd); }
         .status-pill.s-dnd .status-dot::before { content: ""; width: 70%; height: 2px; background: rgba(0,0,0,0.6); border-radius: 1px; }
 
@@ -116,7 +109,6 @@
         .social-link.whatsapp:hover { background: var(--whatsapp); box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3); }
         .social-link.banned { cursor: not-allowed; opacity: 0.25; filter: grayscale(1); }
 
-        /* --- MUSIC PLAYER --- */
         .music-player { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; position: relative; z-index: 15; }
         .music-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
         .music-icon { font-size: 18px; color: rgba(255,255,255,0.4); flex-shrink: 0; }
@@ -125,15 +117,16 @@
         .play-btn { background: none; border: none; color: #fff; cursor: pointer; font-size: 22px; flex-shrink: 0; }
         .player-controls { display: flex; align-items: center; gap: 12px; }
 
-        /* seekable progress bar */
         .progress-bar {
             flex: 1; height: 5px; background: rgba(255,255,255,0.1);
             border-radius: 10px; position: relative; cursor: pointer;
-            overflow: hidden; transition: height 0.15s;
+            /* override global user-select:none so drag works */
+            user-select: none; -webkit-user-select: none;
+            touch-action: none;
+            transition: height 0.15s;
         }
         .progress-bar:hover { height: 7px; }
-        #progress-fill { height: 100%; background: #fff; width: 0%; pointer-events: none; }
-
+        #progress-fill { height: 100%; background: #fff; width: 0%; pointer-events: none; border-radius: 10px; }
 
         @media (max-width: 480px) { .profile-card { padding: 40px 20px; border-radius: 35px; } }
     </style>
@@ -154,7 +147,6 @@
             <p>なまえは しあおしあ です،<br>はじめまして。( ᗜˬᗜ )</p>
         </div>
 
-        <!-- Single status pill -->
         <div class="status-pill s-offline" id="status-pill">
             <div class="status-dot"></div>
             <span id="status-label">Offline</span>
@@ -205,7 +197,6 @@
                 <div class="progress-bar" id="progress-bar">
                     <div id="progress-fill"></div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -214,50 +205,54 @@
         const USER_ID = '630062323448676352';
         const BADGE_MAP = { 1:"discordstaff", 2:"discordpartner", 4:"hypesquadevents", 8:"bughunterlevel1", 64:"hypesquadbravery", 128:"hypesquadbrilliance", 256:"hypesquadbalance", 512:"earlysupporter", 16384:"bughunterlevel2", 131072:"discordcertifiedmoderator", 4194304:"activedeveloper" };
 
-        // ── Overlay ──────────────────────────────────────────────
+        // ── Overlay ───────────────────────────────────────────────
         function startPage() {
             document.getElementById('overlay').style.opacity = '0';
             setTimeout(() => document.getElementById('overlay').style.display = 'none', 800);
             const card = document.getElementById('profile-card');
             card.style.opacity = '1';
             card.style.transform = 'scale(1) translateY(0)';
-            const audio = document.getElementById('audio-player');
-            audio.play().then(() => syncPlayIcon()).catch(() => {});
+            document.getElementById('audio-player').play().then(syncPlayIcon).catch(() => {});
         }
 
-        // ── Music player ─────────────────────────────────────────
-        const audioEl = document.getElementById('audio-player');
-        const playBtn = document.getElementById('play-pause');
+        // ── Music player ──────────────────────────────────────────
+        const audioEl      = document.getElementById('audio-player');
+        const playBtn      = document.getElementById('play-pause');
         const progressFill = document.getElementById('progress-fill');
+        const progressBar  = document.getElementById('progress-bar');
 
         function syncPlayIcon() {
-            playBtn.innerHTML = audioEl.paused
-                ? '<i class="fas fa-play"></i>'
-                : '<i class="fas fa-pause"></i>';
+            playBtn.innerHTML = audioEl.paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
         }
+        function toggleMusic() { audioEl.paused ? audioEl.play() : audioEl.pause(); }
 
-        function toggleMusic() {
-            if (audioEl.paused) { audioEl.play(); } else { audioEl.pause(); }
-        }
-
-        // sync icon whenever audio state changes (covers headset buttons, notification center, etc.)
         audioEl.addEventListener('play',  syncPlayIcon);
         audioEl.addEventListener('pause', syncPlayIcon);
 
-        // progress bar fill
         audioEl.addEventListener('timeupdate', () => {
             if (!audioEl.duration) return;
-            const pct = (audioEl.currentTime / audioEl.duration) * 100;
-            progressFill.style.width = pct + '%';
+            progressFill.style.width = (audioEl.currentTime / audioEl.duration * 100) + '%';
         });
 
-        // seekable — click anywhere on the bar
-        document.getElementById('progress-bar').addEventListener('click', function(e) {
+        // ── Drag-to-seek (works despite user-select:none on body) ─
+        function seekFromPointer(e) {
             if (!audioEl.duration) return;
-            const rect = this.getBoundingClientRect();
+            const rect  = progressBar.getBoundingClientRect();
             const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
             audioEl.currentTime = ratio * audioEl.duration;
+        }
+
+        let dragging = false;
+        progressBar.addEventListener('pointerdown', (e) => {
+            dragging = true;
+            progressBar.setPointerCapture(e.pointerId);
+            seekFromPointer(e);
         });
+        progressBar.addEventListener('pointermove', (e) => {
+            if (dragging) seekFromPointer(e);
+        });
+        progressBar.addEventListener('pointerup',     () => { dragging = false; });
+        progressBar.addEventListener('pointercancel', () => { dragging = false; });
 
         // ── Lanyard ───────────────────────────────────────────────
         const STATUS_CONFIG = {
@@ -273,11 +268,9 @@
                 const { data } = await res.json();
                 const u = data.discord_user;
 
-                // avatar
                 document.getElementById('main-avatar').src =
                     `https://cdn.discordapp.com/avatars/${USER_ID}/${u.avatar}.png?size=256`;
 
-                // avatar decoration
                 const decoEl = document.getElementById('avatar-deco');
                 if (u.avatar_decoration_data) {
                     decoEl.src = `https://cdn.discordapp.com/avatar-decoration-presets/${u.avatar_decoration_data.asset}.png`;
@@ -286,7 +279,6 @@
                     decoEl.style.display = 'none';
                 }
 
-                // badges
                 const grid = document.getElementById('badges-grid');
                 grid.innerHTML = '';
                 Object.keys(BADGE_MAP).forEach(f => {
@@ -294,40 +286,32 @@
                         grid.innerHTML += `<img src="https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/${BADGE_MAP[f]}.svg" class="badge-icon">`;
                 });
 
-                // single status pill
-                const pill = document.getElementById('status-pill');
-                const labelEl = document.getElementById('status-label');
                 const status = data.discord_status || 'offline';
-                const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.offline;
-                pill.className = `status-pill ${cfg.cls}`;
-                labelEl.textContent = cfg.label;
+                const cfg    = STATUS_CONFIG[status] || STATUS_CONFIG.offline;
+                document.getElementById('status-pill').className    = `status-pill ${cfg.cls}`;
+                document.getElementById('status-label').textContent = cfg.label;
 
-                // game activity
                 const game = data.activities?.find(a => a.type === 0);
                 if (game) {
-                    document.getElementById('game-act').style.display = 'block';
-                    document.getElementById('game-name').innerText = game.name;
-                    document.getElementById('game-detail').innerText = game.details || 'In Game';
+                    document.getElementById('game-act').style.display   = 'block';
+                    document.getElementById('game-name').innerText      = game.name;
+                    document.getElementById('game-detail').innerText    = game.details || 'In Game';
                     let img = 'https://i.imgur.com/3QjqZ3p.png';
                     if (game.assets?.large_image) {
-                        if (game.assets.large_image.startsWith('mp:'))
-                            img = `https://media.discordapp.net/${game.assets.large_image.replace('mp:', '')}`;
-                        else if (game.assets.large_image.startsWith('external:'))
-                            img = `https://media.discordapp.net/external/${game.assets.large_image.split('external:')[1]}`;
-                        else
-                            img = `https://cdn.discordapp.com/app-assets/${game.application_id}/${game.assets.large_image}.png`;
+                        if      (game.assets.large_image.startsWith('mp:'))       img = `https://media.discordapp.net/${game.assets.large_image.replace('mp:', '')}`;
+                        else if (game.assets.large_image.startsWith('external:')) img = `https://media.discordapp.net/external/${game.assets.large_image.split('external:')[1]}`;
+                        else                                                       img = `https://cdn.discordapp.com/app-assets/${game.application_id}/${game.assets.large_image}.png`;
                     }
                     document.getElementById('game-img').src = img;
                 } else {
                     document.getElementById('game-act').style.display = 'none';
                 }
 
-                // spotify
                 if (data.listening_to_spotify) {
                     document.getElementById('spotify-act').style.display = 'block';
-                    document.getElementById('spotify-name').innerText = data.spotify.song;
-                    document.getElementById('spotify-artist').innerText = data.spotify.artist;
-                    document.getElementById('spotify-img').src = data.spotify.album_art_url;
+                    document.getElementById('spotify-name').innerText    = data.spotify.song;
+                    document.getElementById('spotify-artist').innerText  = data.spotify.artist;
+                    document.getElementById('spotify-img').src           = data.spotify.album_art_url;
                 } else {
                     document.getElementById('spotify-act').style.display = 'none';
                 }
