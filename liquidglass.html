@@ -19,6 +19,7 @@
             --online: #23a55a;
             --idle: #f0b232;
             --dnd: #f23f43;
+            --offline: #80848e;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-drag: none; }
@@ -28,11 +29,10 @@
         body::before {
             content: ""; position: fixed; inset: -150px; z-index: -1;
             background: var(--electric); background-size: 400% 400%;
-            -webkit-mask-image: url("topo.svg"); mask-image: url("topo.svg");
+            -webkit-mask-image: url("https://raw.githubusercontent.com/x14oc14/XIAOCIA.XYZ/main/topo.svg"); mask-image: url("https://raw.githubusercontent.com/x14oc14/XIAOCIA.XYZ/main/topo.svg");
             -webkit-mask-size: 800px; mask-size: 800px;
             -webkit-mask-repeat: repeat; mask-repeat: repeat;
-            opacity: 0.92;
-            -webkit-transform: translateZ(0); transform: translateZ(0);
+            opacity: 0.6; -webkit-transform: translateZ(0); transform: translateZ(0);
             will-change: background-position, mask-position;
             animation: flowWave 15s linear infinite, moveTopo 60s linear infinite;
         }
@@ -44,48 +44,24 @@
         .overlay-text { font-size: 50px; color: #fff; font-weight: 700; letter-spacing: 15px; opacity: 0.5; }
 
         .profile-card {
-            position: relative;
-            /* blur: 5px, refraction (background opacity): 0.4 */
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            border-radius: 40px;
-            padding: 50px 30px;
-            max-width: 380px;
-            width: 92%;
-            text-align: center;
-            opacity: 0;
-            transform: scale(0.9);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            /* depth: 0 */
-            box-shadow:
-                0 8px 32px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.5),
-                inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-            overflow: hidden;
-            transition: 1.2s cubic-bezier(0.175,0.885,0.32,1.1);
+            background: var(--card-bg);
+            backdrop-filter: blur(6px) saturate(180%) contrast(100%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%) contrast(100%);
+            border-radius: 40px; padding: 50px 30px; text-align: center; max-width: 380px; width: 92%; 
+            opacity: 0; transform: scale(0.9); position: relative;
+            border: none;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8);
+            transition: 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.1);
         }
 
-        /* top edge highlight */
         .profile-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        /* left edge highlight */
-        .profile-card::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 1px; height: 100%;
-            background: linear-gradient(180deg, rgba(255,255,255,0.8), transparent, rgba(255,255,255,0.3));
-            z-index: 1;
-            pointer-events: none;
+            content: "";
+            position: absolute; inset: 0; border-radius: 40px; padding: 3px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.7));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude;
+            pointer-events: none; z-index: 20;
         }
 
         .avatar-container { position: relative; width: 125px; height: 125px; margin: 0 auto 15px; z-index: 15; }
@@ -99,96 +75,65 @@
         .profile-info h2 { font-weight: 700; color: #fff; margin: 0; font-size: 2rem; letter-spacing: -0.8px; }
         .profile-info p { font-size: 0.9rem; color: #ccc; margin: 10px 0 25px; line-height: 1.6; opacity: 0.8; }
 
-        .status-list {
-            display: flex; justify-content: center; gap: 12px;
-            margin-bottom: 25px; padding: 10px;
+        /* --- STATUS: single pill --- */
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 7px;
+            margin-bottom: 25px; padding: 7px 16px;
+            background: var(--inner-glass); border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
             position: relative; z-index: 15;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow:
-                0 8px 32px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.5),
-                inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+            transition: color 0.4s, border-color 0.4s;
         }
-
-        .status-item { display: flex; align-items: center; gap: 6px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: rgba(255, 255, 255, 0.1); }
-        .status-icon { width: 10px; height: 10px; position: relative; display: inline-block; background: currentColor; }
-        .online-circle { border-radius: 50%; }
-        .idle-moon { background: transparent; border-radius: 50%; box-shadow: inset -3.5px -2.5px 0 0 currentColor; transform: rotate(-15deg); }
-        .dnd-sphere { border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .dnd-sphere::before { content: ""; width: 70%; height: 2px; background: rgba(0,0,0,0.6); border-radius: 1px; }
-
-        .status-item.active-online { color: var(--online); opacity: 1; filter: drop-shadow(0 0 5px rgba(35, 165, 90, 0.4)); }
-        .status-item.active-idle { color: var(--idle); opacity: 1; filter: drop-shadow(0 0 5px rgba(240, 178, 50, 0.4)); }
-        .status-item.active-dnd { color: var(--dnd); opacity: 1; filter: drop-shadow(0 0 5px rgba(242, 63, 67, 0.4)); }
+        .status-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: currentColor; flex-shrink: 0;
+            transition: background 0.4s;
+        }
+        .status-pill.s-online  { color: var(--online);  border-color: rgba(35,165,90,0.25);  }
+        .status-pill.s-idle    { color: var(--idle);    border-color: rgba(240,178,50,0.25); }
+        .status-pill.s-dnd     { color: var(--dnd);     border-color: rgba(242,63,67,0.25);  }
+        .status-pill.s-offline { color: var(--offline); border-color: rgba(128,132,142,0.25);}
+        /* idle: crescent shape */
+        .status-pill.s-idle .status-dot { background: transparent; border-radius: 50%; box-shadow: inset -3.5px -2.5px 0 0 var(--idle); transform: rotate(-15deg); }
+        /* dnd: circle with bar */
+        .status-pill.s-dnd .status-dot { display: flex; align-items: center; justify-content: center; background: var(--dnd); }
+        .status-pill.s-dnd .status-dot::before { content: ""; width: 70%; height: 2px; background: rgba(0,0,0,0.6); border-radius: 1px; }
 
         .activity-section { display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px; text-align: left; width: 100%; position: relative; z-index: 15; }
         .status-label { font-size: 0.65rem; font-weight: 800; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6; padding-left: 5px; }
         .status-label span { color: rgba(255, 255, 255, 0.4); text-transform: lowercase; font-weight: 400; }
 
-        .act-card {
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 14px;
-            display: flex; align-items: center; gap: 14px; overflow: hidden;
-            box-shadow:
-                0 8px 32px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.5),
-                inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-        }
-
+        .act-card { background: var(--inner-glass); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 14px; display: flex; align-items: center; gap: 14px; overflow: hidden; }
         .act-img { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; background: #000; flex-shrink: 0; }
         .act-info { flex: 1; min-width: 0; overflow: hidden; }
         .act-info h4 { font-size: 0.85rem; color: #fff; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
         .act-info p { font-size: 0.7rem; color: #aaa; margin: 2px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .social-icons { list-style: none; padding: 0; display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; position: relative; z-index: 15; }
-        .social-link {
-            text-decoration: none; color: #fff;
-            width: 52px; height: 52px; border-radius: 18px;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 22px;
-            transition: 0.4s;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow:
-                0 8px 32px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.5),
-                inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-        }
+        .social-link { text-decoration: none; color: #fff; width: 52px; height: 52px; border-radius: 18px; display: flex; justify-content: center; align-items: center; transition: 0.4s; font-size: 22px; border: 1px solid rgba(255,255,255,0.1); background: var(--inner-glass); }
         .social-link.discord:hover { background: var(--discord); box-shadow: 0 10px 20px rgba(88, 101, 242, 0.3); }
         .social-link.whatsapp:hover { background: var(--whatsapp); box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3); }
         .social-link.banned { cursor: not-allowed; opacity: 0.25; filter: grayscale(1); }
 
-        .music-player { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; position: relative; z-index: 15; }
-        .play-btn {
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow:
-                0 8px 32px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.5),
-                inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-            color: #fff; cursor: pointer; font-size: 18px;
-            width: 40px; height: 40px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            transition: 0.25s ease;
-            flex-shrink: 0;
-        }
-        .play-btn:hover { background: rgba(255,255,255,0.55); transform: scale(1.08); }
-        .play-btn:active { transform: scale(0.95); }
+        /* --- MUSIC PLAYER --- */
+        .music-player { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; position: relative; z-index: 15; }
+        .music-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .music-icon { font-size: 18px; color: rgba(255,255,255,0.4); flex-shrink: 0; }
+        .music-title { font-size: 0.78rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; text-align: center; }
+        .music-sub { font-size: 0.65rem; color: rgba(255,255,255,0.4); text-align: center; margin-top: 1px; }
+        .play-btn { background: none; border: none; color: #fff; cursor: pointer; font-size: 22px; flex-shrink: 0; }
+        .player-controls { display: flex; align-items: center; gap: 12px; }
 
-        .progress-bar { flex: 1; height: 5px; background: rgba(255,255,255,0.1); border-radius: 10px; position: relative; overflow: hidden; }
-        #progress-fill { height: 100%; background: #fff; width: 0%; transition: width 0.2s linear; }
+        /* seekable progress bar */
+        .progress-bar {
+            flex: 1; height: 5px; background: rgba(255,255,255,0.1);
+            border-radius: 10px; position: relative; cursor: pointer;
+            overflow: hidden; transition: height 0.15s;
+        }
+        .progress-bar:hover { height: 7px; }
+        #progress-fill { height: 100%; background: #fff; width: 0%; pointer-events: none; }
+
 
         @media (max-width: 480px) { .profile-card { padding: 40px 20px; border-radius: 35px; } }
     </style>
@@ -201,18 +146,20 @@
     <div class="profile-card" id="profile-card">
         <div class="avatar-container">
             <img class="user-avatar" id="main-avatar" src="" alt="">
-            <img class="avatar-deco" id="avatar-deco" src="" alt="">
+            <img class="avatar-deco" id="avatar-deco" src="" alt="" style="display:none;">
         </div>
         <div class="badges-container" id="badges-grid"></div>
         <div class="profile-info">
             <h2>ハロー！</h2>
             <p>なまえは しあおしあ です،<br>はじめまして。( ᗜˬᗜ )</p>
         </div>
-        <div class="status-list">
-            <div class="status-item" id="stat-online"><div class="status-icon online-circle"></div>Online</div>
-            <div class="status-item" id="stat-idle"><div class="status-icon idle-moon"></div>Idle</div>
-            <div class="status-item" id="stat-dnd"><div class="status-icon dnd-sphere"></div>DND</div>
+
+        <!-- Single status pill -->
+        <div class="status-pill s-offline" id="status-pill">
+            <div class="status-dot"></div>
+            <span id="status-label">Offline</span>
         </div>
+
         <div class="activity-section">
             <div id="game-act" style="display: none;">
                 <div class="status-label" style="color: var(--discord);">Playing Now</div>
@@ -232,17 +179,33 @@
                 </div>
             </div>
         </div>
+
         <div class="social-icons">
             <a href="https://discordapp.com/users/630062323448676352" target="_blank" class="social-link discord"><i class="fab fa-discord"></i></a>
             <a href="javascript:void(0)" class="social-link instagram banned"><i class="fab fa-instagram"></i></a>
             <a href="javascript:void(0)" class="social-link facebook banned"><i class="fab fa-facebook"></i></a>
             <a href="https://wa.me/33525330188?text=.menu" target="_blank" class="social-link whatsapp"><i class="fab fa-whatsapp"></i></a>
         </div>
+
         <div class="music-player">
-            <audio id="audio-player" loop><source src="ArcaneTheBridge.mp3" type="audio/mpeg"></audio>
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <button class="play-btn" onclick="toggleMusic()" id="play-pause"><i class="fas fa-play"></i></button>
-                <div class="progress-bar"><div id="progress-fill"></div></div>
+            <audio id="audio-player" loop>
+                <source src="ArcaneTheBridge.mp3" type="audio/mpeg">
+            </audio>
+            <div class="music-meta">
+                <i class="fas fa-music music-icon"></i>
+                <div style="flex:1; min-width:0;">
+                    <div class="music-title">Arcane — The Bridge</div>
+                    <div class="music-sub">Arcane OST · League of Legends</div>
+                </div>
+            </div>
+            <div class="player-controls">
+                <button class="play-btn" onclick="toggleMusic()" id="play-pause">
+                    <i class="fas fa-play"></i>
+                </button>
+                <div class="progress-bar" id="progress-bar">
+                    <div id="progress-fill"></div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -251,17 +214,58 @@
         const USER_ID = '630062323448676352';
         const BADGE_MAP = { 1:"discordstaff", 2:"discordpartner", 4:"hypesquadevents", 8:"bughunterlevel1", 64:"hypesquadbravery", 128:"hypesquadbrilliance", 256:"hypesquadbalance", 512:"earlysupporter", 16384:"bughunterlevel2", 131072:"discordcertifiedmoderator", 4194304:"activedeveloper" };
 
-        function formatDuration(start) {
-            const diff = Date.now() - start;
-            const h = Math.floor(diff / 3600000);
-            const m = Math.floor((diff % 3600000) / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
-            return `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} elapsed`;
+        // ── Overlay ──────────────────────────────────────────────
+        function startPage() {
+            document.getElementById('overlay').style.opacity = '0';
+            setTimeout(() => document.getElementById('overlay').style.display = 'none', 800);
+            const card = document.getElementById('profile-card');
+            card.style.opacity = '1';
+            card.style.transform = 'scale(1) translateY(0)';
+            const audio = document.getElementById('audio-player');
+            audio.play().then(() => syncPlayIcon()).catch(() => {});
         }
 
-        function startPage() { document.getElementById('overlay').style.opacity = '0'; setTimeout(() => document.getElementById('overlay').style.display = 'none', 800); const card = document.getElementById('profile-card'); card.style.opacity = '1'; card.style.transform = 'scale(1) translateY(0)'; document.getElementById('audio-player').play(); document.getElementById('play-pause').innerHTML = '<i class="fas fa-pause"></i>'; }
-        function toggleMusic() { const a = document.getElementById('audio-player'); const b = document.getElementById('play-pause'); if (a.paused) { a.play(); b.innerHTML = '<i class="fas fa-pause"></i>'; } else { a.pause(); b.innerHTML = '<i class="fas fa-play"></i>'; } }
-        const audioEl = document.getElementById('audio-player'); audioEl.addEventListener('timeupdate', () => { const fill = document.getElementById('progress-fill'); if (fill) fill.style.width = (audioEl.currentTime / audioEl.duration * 100) + '%'; });
+        // ── Music player ─────────────────────────────────────────
+        const audioEl = document.getElementById('audio-player');
+        const playBtn = document.getElementById('play-pause');
+        const progressFill = document.getElementById('progress-fill');
+
+        function syncPlayIcon() {
+            playBtn.innerHTML = audioEl.paused
+                ? '<i class="fas fa-play"></i>'
+                : '<i class="fas fa-pause"></i>';
+        }
+
+        function toggleMusic() {
+            if (audioEl.paused) { audioEl.play(); } else { audioEl.pause(); }
+        }
+
+        // sync icon whenever audio state changes (covers headset buttons, notification center, etc.)
+        audioEl.addEventListener('play',  syncPlayIcon);
+        audioEl.addEventListener('pause', syncPlayIcon);
+
+        // progress bar fill
+        audioEl.addEventListener('timeupdate', () => {
+            if (!audioEl.duration) return;
+            const pct = (audioEl.currentTime / audioEl.duration) * 100;
+            progressFill.style.width = pct + '%';
+        });
+
+        // seekable — click anywhere on the bar
+        document.getElementById('progress-bar').addEventListener('click', function(e) {
+            if (!audioEl.duration) return;
+            const rect = this.getBoundingClientRect();
+            const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            audioEl.currentTime = ratio * audioEl.duration;
+        });
+
+        // ── Lanyard ───────────────────────────────────────────────
+        const STATUS_CONFIG = {
+            online:  { cls: 's-online',  label: 'Online'  },
+            idle:    { cls: 's-idle',    label: 'Idle'    },
+            dnd:     { cls: 's-dnd',     label: 'Do Not Disturb' },
+            offline: { cls: 's-offline', label: 'Offline' },
+        };
 
         async function updateLanyard() {
             try {
@@ -269,35 +273,70 @@
                 const { data } = await res.json();
                 const u = data.discord_user;
 
-                document.getElementById('main-avatar').src = `https://cdn.discordapp.com/avatars/${USER_ID}/${u.avatar}.png?size=256`;
-                if(u.avatar_decoration_data) { document.getElementById('avatar-deco').src = `https://cdn.discordapp.com/avatar-decoration-presets/${u.avatar_decoration_data.asset}.png`; document.getElementById('avatar-deco').style.display = 'block'; } else { document.getElementById('avatar-deco').style.display = 'none'; }
-                const sOn = document.getElementById('stat-online'), sId = document.getElementById('stat-idle'), sDn = document.getElementById('stat-dnd'); sOn.className = sId.className = sDn.className = 'status-item';
-                if (data.discord_status === 'online') sOn.classList.add('active-online'); else if (data.discord_status === 'idle') sId.classList.add('active-idle'); else if (data.discord_status === 'dnd') sDn.classList.add('active-dnd');
-                const grid = document.getElementById('badges-grid'); grid.innerHTML = ''; Object.keys(BADGE_MAP).forEach(f => { if (u.public_flags & f) grid.innerHTML += `<img src="https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/${BADGE_MAP[f]}.svg" class="badge-icon">`; });
+                // avatar
+                document.getElementById('main-avatar').src =
+                    `https://cdn.discordapp.com/avatars/${USER_ID}/${u.avatar}.png?size=256`;
 
-                const game = data.activities.find(a => a.type === 0);
-                if(game) {
+                // avatar decoration
+                const decoEl = document.getElementById('avatar-deco');
+                if (u.avatar_decoration_data) {
+                    decoEl.src = `https://cdn.discordapp.com/avatar-decoration-presets/${u.avatar_decoration_data.asset}.png`;
+                    decoEl.style.display = 'block';
+                } else {
+                    decoEl.style.display = 'none';
+                }
+
+                // badges
+                const grid = document.getElementById('badges-grid');
+                grid.innerHTML = '';
+                Object.keys(BADGE_MAP).forEach(f => {
+                    if (u.public_flags & f)
+                        grid.innerHTML += `<img src="https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/${BADGE_MAP[f]}.svg" class="badge-icon">`;
+                });
+
+                // single status pill
+                const pill = document.getElementById('status-pill');
+                const labelEl = document.getElementById('status-label');
+                const status = data.discord_status || 'offline';
+                const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.offline;
+                pill.className = `status-pill ${cfg.cls}`;
+                labelEl.textContent = cfg.label;
+
+                // game activity
+                const game = data.activities?.find(a => a.type === 0);
+                if (game) {
                     document.getElementById('game-act').style.display = 'block';
                     document.getElementById('game-name').innerText = game.name;
-                    if(game.timestamps && game.timestamps.start) {
-                        document.getElementById('game-detail').innerText = `${game.details || ''} (${formatDuration(game.timestamps.start)})`;
-                    } else {
-                        document.getElementById('game-detail').innerText = game.details || 'In Game';
-                    }
+                    document.getElementById('game-detail').innerText = game.details || 'In Game';
                     let img = 'https://i.imgur.com/3QjqZ3p.png';
-                    if(game.assets?.large_image) { if(game.assets.large_image.startsWith("mp:")) img = `https://media.discordapp.net/${game.assets.large_image.replace("mp:", "")}`; else if(game.assets.large_image.startsWith("external:")) img = `https://media.discordapp.net/external/${game.assets.large_image.split("external:")[1]}`; else img = `https://cdn.discordapp.com/app-assets/${game.application_id}/${game.assets.large_image}.png`; }
+                    if (game.assets?.large_image) {
+                        if (game.assets.large_image.startsWith('mp:'))
+                            img = `https://media.discordapp.net/${game.assets.large_image.replace('mp:', '')}`;
+                        else if (game.assets.large_image.startsWith('external:'))
+                            img = `https://media.discordapp.net/external/${game.assets.large_image.split('external:')[1]}`;
+                        else
+                            img = `https://cdn.discordapp.com/app-assets/${game.application_id}/${game.assets.large_image}.png`;
+                    }
                     document.getElementById('game-img').src = img;
-                } else { document.getElementById('game-act').style.display = 'none'; }
+                } else {
+                    document.getElementById('game-act').style.display = 'none';
+                }
 
-                if(data.listening_to_spotify) {
+                // spotify
+                if (data.listening_to_spotify) {
                     document.getElementById('spotify-act').style.display = 'block';
                     document.getElementById('spotify-name').innerText = data.spotify.song;
                     document.getElementById('spotify-artist').innerText = data.spotify.artist;
                     document.getElementById('spotify-img').src = data.spotify.album_art_url;
-                } else { document.getElementById('spotify-act').style.display = 'none'; }
+                } else {
+                    document.getElementById('spotify-act').style.display = 'none';
+                }
+
             } catch (e) { console.error(e); }
         }
-        updateLanyard(); setInterval(updateLanyard, 1000);
+
+        updateLanyard();
+        setInterval(updateLanyard, 10000);
     </script>
 </body>
 </html>
