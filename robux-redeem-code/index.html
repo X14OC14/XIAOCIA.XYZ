@@ -188,6 +188,7 @@ function resize() {
   buildTextMask();
 }
 window.addEventListener("resize", resize);
+window.addEventListener("orientationchange", () => setTimeout(resize, 100));
 
 // ── Noise — buat sekali, reuse supaya ringan ───────────────────────
 let noiseCanvas = document.createElement("canvas");
@@ -278,18 +279,50 @@ function drawFrame() {
   ctx.drawImage(maskCanvas, 0, 0);
 }
 
-// ── Fetch kode, lalu mulai animasi ────────────────────────────────
+// ── Decrypt ───────────────────────────────────────────────────────
+// prettier-ignore
+const _KEY = [88,73,65,79,67,73,65].map(c => String.fromCharCode(c)).join("");
+
+async function decryptCode(encryptedB64) {
+  const raw        = atob(encryptedB64);
+  const bytes      = Uint8Array.from(raw, c => c.charCodeAt(0));
+  const iv         = bytes.slice(0, 12);
+  const data       = bytes.slice(12);
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(_KEY.padEnd(16, "0").slice(0, 16)),
+    { name: "AES-GCM" },
+    false,
+    ["decrypt"]
+  );
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    keyMaterial,
+    data
+  );
+  return new TextDecoder().decode(decrypted);
+}
+
+// ── Fetch kode, decrypt, lalu mulai animasi ───────────────────────
+function startLoop() {
+  (function loop() { drawFrame(); requestAnimationFrame(loop); })();
+}
+
 fetch("../robux.json")
   .then(r => r.json())
-  .then(data => {
-    code = data.code;
+  .then(async data => {
+    try {
+      code = await decryptCode(data.code);
+    } catch {
+      code = "???";
+    }
     buildTextMask();
-    (function loop() { drawFrame(); requestAnimationFrame(loop); })();
+    startLoop();
   })
   .catch(() => {
     code = "ERROR";
     buildTextMask();
-    (function loop() { drawFrame(); requestAnimationFrame(loop); })();
+    startLoop();
   });
 </script>
 </body>
