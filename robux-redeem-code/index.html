@@ -183,8 +183,10 @@ let code = ""; // diisi dari data.json
 function resize() {
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
+  buildNoise();
+  buildTextTexture();
+  buildTextMask();
 }
-resize();
 window.addEventListener("resize", resize);
 
 // ── Noise — buat sekali, reuse supaya ringan ───────────────────────
@@ -227,18 +229,8 @@ function buildTextTexture() {
   }
   texCtx.putImageData(img, 0, 0);
 }
-buildTextTexture(); // sekali, gak pernah diupdate lagi
+buildTextTexture();
 
-// Rebuild saat resize biar tetap pixel-perfect
-window.addEventListener("resize", () => {
-  buildTextTexture();
-  buildTextMask();
-});
-
-const textPattern = ctx.createPattern(texCanvas, "repeat");
-
-// ── Pre-bake text mask (static noise dalam bentuk teks) ───────────
-// Dibuat ulang saat resize, tapi tidak tiap frame
 const maskCanvas = document.createElement("canvas");
 const maskCtx    = maskCanvas.getContext("2d");
 
@@ -267,44 +259,37 @@ function buildTextMask() {
 }
 buildTextMask();
 
-// ── Glow animation state ───────────────────────────────────────────
-let glowPhase = 0;
+// ── Init semua canvas setelah semua fungsi siap ────────────────────
+canvas.width  = window.innerWidth;
+canvas.height = window.innerHeight;
+buildNoise();
+buildTextTexture();
+buildTextMask();
 
+// ── Draw ───────────────────────────────────────────────────────────
 function drawFrame() {
   const W = canvas.width;
   const H = canvas.height;
 
-  // Refresh noise background setiap ~8 frame
   noiseFrameCounter++;
   if (noiseFrameCounter % 8 === 0) buildNoise();
 
-  // 1. Gambar animated noise sebagai background
   ctx.drawImage(noiseCanvas, 0, 0);
-
-  // 2. Tempel pre-baked text mask — static noise di bentuk teks
-  //    Karena warna noise teks sama range-nya dengan bg tapi DIAM,
-  //    teks hanya keliatan dari perbedaan gerak
   ctx.drawImage(maskCanvas, 0, 0);
 }
 
-// Ambil kode dari file terpisah, baru mulai animasi
+// ── Fetch kode, lalu mulai animasi ────────────────────────────────
 fetch("../robux.json")
   .then(r => r.json())
   .then(data => {
     code = data.code;
-    buildTextMask(); // rebuild mask sekarang kode sudah ada
-    (function loop() {
-      drawFrame();
-      requestAnimationFrame(loop);
-    })();
+    buildTextMask();
+    (function loop() { drawFrame(); requestAnimationFrame(loop); })();
   })
   .catch(() => {
     code = "ERROR";
     buildTextMask();
-    (function loop() {
-      drawFrame();
-      requestAnimationFrame(loop);
-    })();
+    (function loop() { drawFrame(); requestAnimationFrame(loop); })();
   });
 </script>
 </body>
