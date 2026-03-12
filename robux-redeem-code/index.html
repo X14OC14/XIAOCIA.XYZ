@@ -166,7 +166,6 @@ function detectBrowser() {
 }
 
 const browser = detectBrowser();
-console.log("Browser:", browser.name);
 
 if (browser.id !== "chrome") {
   const warn = document.getElementById("browser-warning");
@@ -209,7 +208,6 @@ function buildNoise() {
   }
   noiseCtx.putImageData(img, 0, 0);
 }
-buildNoise();
 
 // ── Text Texture — canvas noise statis, dibuat sekali, gak beranimasi ──
 const texCanvas = document.createElement("canvas");
@@ -221,7 +219,6 @@ function buildTextTexture() {
   const img = texCtx.createImageData(canvas.width, canvas.height);
   const buf = img.data;
   for (let i = 0; i < buf.length; i += 4) {
-    // Grayscale — range sama persis dengan background noise
     const v    = 50 + Math.random() * 90;
     buf[i]     = v;
     buf[i + 1] = v;
@@ -230,7 +227,6 @@ function buildTextTexture() {
   }
   texCtx.putImageData(img, 0, 0);
 }
-buildTextTexture();
 
 const maskCanvas = document.createElement("canvas");
 const maskCtx    = maskCanvas.getContext("2d");
@@ -258,7 +254,6 @@ function buildTextMask() {
   // Reset composite mode
   maskCtx.globalCompositeOperation = "source-over";
 }
-buildTextMask();
 
 // ── Init semua canvas setelah semua fungsi siap ────────────────────
 canvas.width  = window.innerWidth;
@@ -281,16 +276,23 @@ function drawFrame() {
 
 // ── Decrypt ───────────────────────────────────────────────────────
 // prettier-ignore
-const _KEY = [88,73,65,79,67,73,65].map(c => String.fromCharCode(c)).join("");
+const _K1 = [88,65,67,65].map(c => String.fromCharCode(c)).join("");
 
-async function decryptCode(encryptedB64) {
+async function decryptCode(encryptedB64, k2) {
+  let _KEY = "";
+  const len = Math.max(_K1.length, k2.length);
+  for (let i = 0; i < len; i++) {
+    if (i < _K1.length) _KEY += _K1[i];
+    if (i < k2.length)  _KEY += k2[i];
+  }
+  _KEY = _KEY.padEnd(16, "0").slice(0, 16);
   const raw        = atob(encryptedB64);
   const bytes      = Uint8Array.from(raw, c => c.charCodeAt(0));
   const iv         = bytes.slice(0, 12);
   const data       = bytes.slice(12);
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(_KEY.padEnd(16, "0").slice(0, 16)),
+    new TextEncoder().encode(_KEY),
     { name: "AES-GCM" },
     false,
     ["decrypt"]
@@ -312,7 +314,7 @@ fetch("../robux.json")
   .then(r => r.json())
   .then(async data => {
     try {
-      code = await decryptCode(data.code);
+      code = await decryptCode(data.code, data.k);
     } catch {
       code = "???";
     }
