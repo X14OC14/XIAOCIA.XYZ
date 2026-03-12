@@ -14,81 +14,298 @@
 <meta property="og:image" content="https://i.ibb.co.com/KxwgKQML/dragonodes2.png">
 <meta property="og:type" content="website">
 
-<!-- Optional biar lebih clean -->
 <meta name="theme-color" content="#000000">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
   body {
-    margin: 0;
-    background: black;
+    background: #000;
     overflow: hidden;
+    font-family: sans-serif;
   }
+
   canvas {
     display: block;
+  }
+
+  /* ── DevTools Overlay ── */
+  #devtools-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ff3300;
+    font-family: monospace;
+    font-size: 18px;
+    text-align: center;
+    gap: 12px;
+    user-select: none;
+  }
+
+  #devtools-overlay .icon { font-size: 52px; }
+  #devtools-overlay p { color: #888; font-size: 13px; margin-top: 4px; }
+  #browser-warning {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 999;
+    background: linear-gradient(90deg, #ff2200, #ff6600);
+    color: #fff;
+    text-align: center;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 12px rgba(255,50,0,0.5);
+  }
+
+  #browser-warning a {
+    color: #ffe566;
+    text-decoration: underline;
+  }
+
+  #browser-warning .close-btn {
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    opacity: 0.8;
+    background: none;
+    border: none;
+    color: white;
   }
 </style>
 </head>
 <body>
+
+<!-- DevTools Overlay -->
+<div id="devtools-overlay">
+  <div class="icon">🚫</div>
+  <div>DevTools terdeteksi!</div>
+  <p>Tutup DevTools untuk melanjutkan.</p>
+</div>
+
+<!-- Browser Warning -->
+<div id="browser-warning">
+  ⚠️ Browser kamu (<span id="browser-name"></span>) mungkin tidak didukung sepenuhnya.
+  Untuk tampilan terbaik gunakan <a href="https://www.google.com/chrome/" target="_blank">Google Chrome</a>.
+  <button class="close-btn" onclick="this.parentElement.style.display='none'">✕</button>
+</div>
+
 <canvas id="c"></canvas>
 
 <script>
-const canvas = document.getElementById("c");
-const ctx = canvas.getContext("2d");
+// ── Anti-Copas Protection ──────────────────────────────────────────
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// 1. Disable klik kanan
+document.addEventListener("contextmenu", e => e.preventDefault());
 
-const code = "RBX-1234-ABCD";
+// 2. Disable keyboard shortcuts: F12, Ctrl+Shift+I/J/C/U, Ctrl+U, Ctrl+S, Ctrl+A
+document.addEventListener("keydown", e => {
+  const ctrl  = e.ctrlKey || e.metaKey;
+  const shift = e.shiftKey;
+  const key   = e.key;
 
-const texture = new Image();
-texture.src = "https://i.ibb.co.com/JWdRV8Rr/Screenshot-20260215-212654.jpg";
-
-let pattern;
-
-texture.onload = () => {
-  pattern = ctx.createPattern(texture, "repeat");
-  animate();
-};
-
-function drawNoiseBackground() {
-  const img = ctx.createImageData(canvas.width, canvas.height);
-  const buf = img.data;
-
-  for (let i = 0; i < buf.length; i += 4) {
-    const val = 60 + Math.random() * 80;
-    buf[i] = val;
-    buf[i+1] = val;
-    buf[i+2] = val;
-    buf[i+3] = 255;
+  if (
+    key === "F12" ||
+    (ctrl && shift && ["I","i","J","j","C","c","K","k"].includes(key)) ||
+    (ctrl && ["U","u","S","s","A","a","P","p"].includes(key))
+  ) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
   }
+});
 
-  ctx.putImageData(img, 0, 0);
-}
+// 3. Override canvas.toDataURL dan canvas.toBlob biar return kosong
+const _toDataURL = HTMLCanvasElement.prototype.toDataURL;
+const _toBlob    = HTMLCanvasElement.prototype.toBlob;
+HTMLCanvasElement.prototype.toDataURL = function() { return ""; };
+HTMLCanvasElement.prototype.toBlob    = function() { return null; };
 
-function drawText() {
-  ctx.save();
+// 4. Deteksi DevTools terbuka via window size delta
+//    Kalau selisih outer vs inner > 160px kemungkinan DevTools nyala
+let devtoolsOpen = false;
+const DEVTOOLS_THRESHOLD = 160;
 
-  ctx.font = "bold 90px monospace";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
+function checkDevTools() {
+  const widthGap  = window.outerWidth  - window.innerWidth;
+  const heightGap = window.outerHeight - window.innerHeight;
 
-  if (pattern) {
-    ctx.fillStyle = pattern;
+  if (widthGap > DEVTOOLS_THRESHOLD || heightGap > DEVTOOLS_THRESHOLD) {
+    if (!devtoolsOpen) {
+      devtoolsOpen = true;
+      // Blur canvas dan tampilkan overlay peringatan
+      document.getElementById("devtools-overlay").style.display = "flex";
+    }
   } else {
-    ctx.fillStyle = "white";
+    if (devtoolsOpen) {
+      devtoolsOpen = false;
+      document.getElementById("devtools-overlay").style.display = "none";
+    }
   }
+}
+setInterval(checkDevTools, 500);
 
-  ctx.fillText(code, canvas.width / 2, canvas.height / 2);
 
-  ctx.restore();
+function detectBrowser() {
+  const ua = navigator.userAgent;
+  if (/Edg\//.test(ua))                          return { id: "edge",    name: "Microsoft Edge" };
+  if (/OPR\/|Opera/.test(ua))                    return { id: "opera",   name: "Opera" };
+  if (/Chrome\//.test(ua) && !/Edg|OPR/.test(ua)) return { id: "chrome", name: "Chrome" };
+  if (/Firefox\//.test(ua))                      return { id: "firefox", name: "Firefox" };
+  if (/Safari\//.test(ua) && !/Chrome/.test(ua)) return { id: "safari",  name: "Safari" };
+  return { id: "unknown", name: "Browser tidak dikenal" };
 }
 
-function animate() {
-  drawNoiseBackground();
-  drawText();
-  requestAnimationFrame(animate);
+const browser = detectBrowser();
+console.log("Browser:", browser.name);
+
+if (browser.id !== "chrome") {
+  const warn = document.getElementById("browser-warning");
+  document.getElementById("browser-name").textContent = browser.name;
+  warn.style.display = "block";
 }
+
+// ── Canvas Setup ───────────────────────────────────────────────────
+const canvas = document.getElementById("c");
+const ctx    = canvas.getContext("2d");
+
+let code = ""; // diisi dari data.json
+
+function resize() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+// ── Noise — buat sekali, reuse supaya ringan ───────────────────────
+let noiseCanvas = document.createElement("canvas");
+let noiseCtx    = noiseCanvas.getContext("2d");
+let noiseFrameCounter = 0;
+
+function buildNoise() {
+  noiseCanvas.width  = canvas.width;
+  noiseCanvas.height = canvas.height;
+  const img = noiseCtx.createImageData(noiseCanvas.width, noiseCanvas.height);
+  const buf = img.data;
+  for (let i = 0; i < buf.length; i += 4) {
+    const v    = 50 + Math.random() * 90;
+    buf[i]     = v;
+    buf[i + 1] = v;
+    buf[i + 2] = v;
+    buf[i + 3] = 255;
+  }
+  noiseCtx.putImageData(img, 0, 0);
+}
+buildNoise();
+
+// ── Text Texture — canvas noise statis, dibuat sekali, gak beranimasi ──
+const texCanvas = document.createElement("canvas");
+const texCtx    = texCanvas.getContext("2d");
+
+function buildTextTexture() {
+  texCanvas.width  = canvas.width;
+  texCanvas.height = canvas.height;
+  const img = texCtx.createImageData(canvas.width, canvas.height);
+  const buf = img.data;
+  for (let i = 0; i < buf.length; i += 4) {
+    // Grayscale — range sama persis dengan background noise
+    const v    = 50 + Math.random() * 90;
+    buf[i]     = v;
+    buf[i + 1] = v;
+    buf[i + 2] = v;
+    buf[i + 3] = 255;
+  }
+  texCtx.putImageData(img, 0, 0);
+}
+buildTextTexture(); // sekali, gak pernah diupdate lagi
+
+// Rebuild saat resize biar tetap pixel-perfect
+window.addEventListener("resize", () => {
+  buildTextTexture();
+  buildTextMask();
+});
+
+const textPattern = ctx.createPattern(texCanvas, "repeat");
+
+// ── Pre-bake text mask (static noise dalam bentuk teks) ───────────
+// Dibuat ulang saat resize, tapi tidak tiap frame
+const maskCanvas = document.createElement("canvas");
+const maskCtx    = maskCanvas.getContext("2d");
+
+function buildTextMask() {
+  const W = canvas.width;
+  const H = canvas.height;
+  maskCanvas.width  = W;
+  maskCanvas.height = H;
+
+  const fontSize = Math.min(W * 0.09, 72);
+
+  // Step 1: tulis teks solid putih sebagai bentuk
+  maskCtx.clearRect(0, 0, W, H);
+  maskCtx.font         = `bold ${fontSize}px Arial, sans-serif`;
+  maskCtx.textAlign    = "center";
+  maskCtx.textBaseline = "middle";
+  maskCtx.fillStyle    = "#fff";
+  maskCtx.fillText(code, W / 2, H / 2);
+
+  // Step 2: tempel static noise 1:1, tanpa stretch
+  maskCtx.globalCompositeOperation = "source-in";
+  maskCtx.drawImage(texCanvas, 0, 0);
+
+  // Reset composite mode
+  maskCtx.globalCompositeOperation = "source-over";
+}
+buildTextMask();
+
+// ── Glow animation state ───────────────────────────────────────────
+let glowPhase = 0;
+
+function drawFrame() {
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Refresh noise background setiap ~8 frame
+  noiseFrameCounter++;
+  if (noiseFrameCounter % 8 === 0) buildNoise();
+
+  // 1. Gambar animated noise sebagai background
+  ctx.drawImage(noiseCanvas, 0, 0);
+
+  // 2. Tempel pre-baked text mask — static noise di bentuk teks
+  //    Karena warna noise teks sama range-nya dengan bg tapi DIAM,
+  //    teks hanya keliatan dari perbedaan gerak
+  ctx.drawImage(maskCanvas, 0, 0);
+}
+
+// Ambil kode dari file terpisah, baru mulai animasi
+fetch("../robux.json")
+  .then(r => r.json())
+  .then(data => {
+    code = data.code;
+    buildTextMask(); // rebuild mask sekarang kode sudah ada
+    (function loop() {
+      drawFrame();
+      requestAnimationFrame(loop);
+    })();
+  })
+  .catch(() => {
+    code = "ERROR";
+    buildTextMask();
+    (function loop() {
+      drawFrame();
+      requestAnimationFrame(loop);
+    })();
+  });
 </script>
-
 </body>
 </html>
