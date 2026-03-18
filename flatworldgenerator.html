@@ -299,11 +299,18 @@
     </div>
 
     <div class="panel">
-      <div class="panel-title">▸ OUTPUT — FlatWorldLayers JSON</div>
-      <div class="copy-hint">Copy → paste ke level.dat editor (key: FlatWorldLayers)</div>
+      <div class="panel-title">▸ GENERATE WORLD</div>
+      <div class="mb">
+        <label>World Name</label>
+        <input type="text" id="world-name" value="My Flat World" placeholder="My Flat World">
+      </div>
+      <div class="btn-row" style="margin-bottom:10px;">
+        <button class="btn btn-green" style="flex:1;padding:12px;" onclick="generateMcworld()">⬇ DOWNLOAD .mcworld</button>
+      </div>
+      <div style="color:var(--muted);font-size:14px;margin-bottom:10px;">atau ambil JSON-nya aja:</div>
       <div id="output-box"></div>
       <div class="btn-row">
-        <button class="btn btn-green" onclick="copyOutput()">COPY JSON</button>
+        <button class="btn btn-blue" onclick="copyOutput()">COPY JSON</button>
         <button class="btn btn-blue" onclick="downloadJSON()">DOWNLOAD .json</button>
       </div>
     </div>
@@ -315,56 +322,32 @@
         <div class="step">
           <div class="step-num">1</div>
           <div class="step-body">
-            <div class="step-title">Download template void world</div>
-            <div class="step-desc">Butuh base <code>.mcworld</code> dulu buat diedit. Pilih salah satu:</div>
-            <div class="link-grid">
-              <a class="dl-link" href="https://www.curseforge.com/minecraft-bedrock/maps/void-world" target="_blank">
-                <span class="dl-icon">📦</span>
-                <span><b>CurseForge</b><br><small>Diupdate rutin, support 1.21+</small></span>
-              </a>
-              <a class="dl-link" href="https://www.universalminecrafttool.com/guides/void-world-bedrock-with-download" target="_blank">
-                <span class="dl-icon">🔧</span>
-                <span><b>Universal MC Tool</b><br><small>Ada guide + download sekalian</small></span>
-              </a>
-              <a class="dl-link" href="https://www.planetminecraft.com/project/bedrock-void-world/" target="_blank">
-                <span class="dl-icon">🌍</span>
-                <span><b>Planet Minecraft</b><br><small>Populer, banyak versi</small></span>
-              </a>
-            </div>
+            <div class="step-title">Atur layer & biome</div>
+            <div class="step-desc">Gunakan panel LAYERS dan BIOME di sebelah kanan. Bisa pakai preset atau custom sendiri.</div>
           </div>
         </div>
 
         <div class="step">
           <div class="step-num">2</div>
           <div class="step-body">
-            <div class="step-title">Install NBT editor</div>
-            <div class="step-desc">Buat edit <code>FlatWorldLayers</code> di level.dat:</div>
-            <div class="link-grid">
-              <a class="dl-link" href="https://www.universalminecrafttool.com" target="_blank">
-                <span class="dl-icon">🛠</span>
-                <span><b>Universal Minecraft Tool</b><br><small>GUI friendly, recommended</small></span>
-              </a>
-              <a class="dl-link" href="https://github.com/tryashtar/universal-minecraft-editor" target="_blank">
-                <span class="dl-icon">⚙️</span>
-                <span><b>Universal MC Editor</b><br><small>Open source, gratis</small></span>
-              </a>
-            </div>
+            <div class="step-title">Kasih nama worldnya</div>
+            <div class="step-desc">Isi nama di field <span class="tag">World Name</span> lalu klik <span class="tag">DOWNLOAD .mcworld</span>. File langsung generate di browser, gak perlu internet.</div>
           </div>
         </div>
 
         <div class="step">
           <div class="step-num">3</div>
           <div class="step-body">
-            <div class="step-title">Edit world</div>
-            <div class="step-desc">Buka <code>.mcworld</code> di editor → <span class="tag">World Settings</span> → scroll ke bawah → cari <span class="tag">FlatWorldLayers</span> → replace isinya dengan JSON dari tools ini → Save</div>
+            <div class="step-title">Import ke Minecraft</div>
+            <div class="step-desc">Buka file <code>.mcworld</code> dari file manager → Minecraft otomatis import → world siap dimainkan! 🎮</div>
           </div>
         </div>
 
         <div class="step">
           <div class="step-num">4</div>
           <div class="step-body">
-            <div class="step-title">Buka di Minecraft</div>
-            <div class="step-desc">Import world yang sudah diedit → enjoy flat world custom lo! 🎮</div>
+            <div class="step-title">Tidak bisa import?</div>
+            <div class="step-desc">Coba rename file jadi <code>.zip</code> → extract → taruh di folder <code>com.mojang/minecraftWorlds/</code> secara manual.</div>
           </div>
         </div>
 
@@ -805,6 +788,305 @@ function downloadJSON(){
 }
 
 init();
+
+// ── MCWORLD GENERATOR ────────────────────────────────────────────────────────
+
+// Minimal valid LevelDB files (base64 encoded)
+// MANIFEST-000001: VersionEdit record with BytewiseComparator
+const MANIFEST_B64 = "XL+VthwAAQEabGV2ZWxkYi5CeXRld2lzZUNvbXBhcmF0b3I=";
+
+function b64ToBytes(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+// ── NBT ENCODER (Little-Endian, Bedrock) ─────────────────────────────────────
+const TAG = { End:0, Byte:1, Short:2, Int:3, Long:4, Float:5, Double:6,
+              ByteArray:7, String:8, List:9, Compound:10, IntArray:11, LongArray:12 };
+
+class NBTWriter {
+  constructor() { this.buf = []; }
+
+  byte(v)  { this.buf.push(v & 0xFF); }
+  int16(v) { this.buf.push(v&0xFF,(v>>8)&0xFF); }
+  int32(v) { this.buf.push(v&0xFF,(v>>8)&0xFF,(v>>16)&0xFF,(v>>24)&0xFF); }
+  int64(lo,hi) { this.int32(lo); this.int32(hi); }
+  float32(v) {
+    const ab = new ArrayBuffer(4); new DataView(ab).setFloat32(0,v,true);
+    new Uint8Array(ab).forEach(b=>this.byte(b));
+  }
+
+  nbtString(s) {
+    const enc = new TextEncoder().encode(s);
+    this.int16(enc.length);
+    enc.forEach(b=>this.byte(b));
+  }
+
+  tag(type, name, writeFn) {
+    this.byte(type);
+    this.nbtString(name);
+    writeFn();
+  }
+
+  tagByte(name,v)  { this.tag(TAG.Byte,  name,()=>this.byte(v)); }
+  tagShort(name,v) { this.tag(TAG.Short, name,()=>this.int16(v)); }
+  tagInt(name,v)   { this.tag(TAG.Int,   name,()=>this.int32(v)); }
+  tagFloat(name,v) { this.tag(TAG.Float, name,()=>this.float32(v)); }
+  tagString(name,v){ this.tag(TAG.String,name,()=>this.nbtString(v)); }
+  tagLong(name,lo,hi){ this.tag(TAG.Long,name,()=>this.int64(lo,hi)); }
+
+  tagIntList(name, arr) {
+    this.tag(TAG.List, name, () => {
+      this.byte(TAG.Int);
+      this.int32(arr.length);
+      arr.forEach(v=>this.int32(v));
+    });
+  }
+
+  tagCompound(name, fn) {
+    this.tag(TAG.Compound, name, ()=>{ fn(); this.byte(TAG.End); });
+  }
+
+  toBytes() { return new Uint8Array(this.buf); }
+}
+
+function buildLevelDat(worldName, flatLayersJson, biomeId) {
+  const w = new NBTWriter();
+  // Root compound (unnamed for Bedrock level.dat)
+  w.byte(TAG.Compound); w.int16(0); // type + empty name
+
+  w.tagInt   ("StorageVersion",        10);
+  w.tagInt   ("NetworkVersion",        594);
+  w.tagString("LevelName",             worldName);
+  w.tagInt   ("GameType",              0);   // Survival
+  w.tagInt   ("Difficulty",            1);   // Easy
+  w.tagByte  ("ForceGameType",         0);
+  w.tagByte  ("Generator",             2);   // 2 = Flat
+  w.tagString("FlatWorldLayers",       flatLayersJson);
+  w.tagInt   ("SpawnX",                0);
+  w.tagInt   ("SpawnY",                64);
+  w.tagInt   ("SpawnZ",                0);
+  w.tagLong  ("Time",                  0, 0);
+  w.tagLong  ("currentTick",           0, 0);
+  w.tagInt   ("Platform",              2);
+  w.tagByte  ("commandsEnabled",       1);
+  w.tagByte  ("hasBeenLoadedInCreative",0);
+  w.tagByte  ("isCreatedInEditor",     0);
+  w.tagByte  ("isExportedFromEditor",  0);
+  w.tagByte  ("MultiplayerGame",       0);
+  w.tagByte  ("LANBroadcast",          0);
+  w.tagByte  ("LANBroadcastIntent",    0);
+  w.tagByte  ("XBLBroadcastIntent",    0);
+  w.tagByte  ("PlatformBroadcastIntent",0);
+  w.tagByte  ("texturePacksRequired",  0);
+  w.tagByte  ("bonusChestEnabled",     0);
+  w.tagByte  ("bonusChestSpawned",     0);
+  w.tagByte  ("startWithMapEnabled",   0);
+  w.tagByte  ("eduLevel",              0);
+  w.tagByte  ("educationFeaturesEnabled",0);
+  w.tagByte  ("hasLockedBehaviorPack", 0);
+  w.tagByte  ("hasLockedResourcePack", 0);
+  w.tagByte  ("isFromLockedTemplate",  0);
+  w.tagByte  ("isFromWorldTemplate",   0);
+  w.tagByte  ("isSingleUseWorld",      0);
+  w.tagByte  ("isWorldTemplateOptionLocked",0);
+  w.tagByte  ("useMsaGamertagsOnly",   0);
+  w.tagByte  ("spawnV1Villagers",      0);
+  w.tagByte  ("randomTickSpeed",       0);
+  w.tagByte  ("naturalregeneration",   1);
+  w.tagByte  ("dofiretick",            1);
+  w.tagByte  ("domobloot",             1);
+  w.tagByte  ("doentitydrops",         1);
+  w.tagByte  ("dotiledrops",           1);
+  w.tagByte  ("doweathercycle",        1);
+  w.tagByte  ("commandblockoutput",    1);
+  w.tagByte  ("sendcommandfeedback",   1);
+  w.tagByte  ("doimmediaterespawn",    0);
+  w.tagByte  ("showdeathmessages",     1);
+  w.tagByte  ("showtags",             1);
+  w.tagByte  ("pvp",                   1);
+  w.tagByte  ("keepinventory",         0);
+  w.tagByte  ("doinsomnia",            1);
+  w.tagByte  ("domobspawning",         1);
+  w.tagByte  ("freezedamage",          0);
+  w.tagByte  ("showRecipeMessages",    1);
+  w.tagInt   ("LimitedWorldOriginX",   0);
+  w.tagInt   ("LimitedWorldOriginY",   32767);
+  w.tagInt   ("LimitedWorldOriginZ",   0);
+  w.tagInt   ("NetherScale",           8);
+  w.tagInt   ("permissionsLevel",      0);
+  w.tagInt   ("playerPermissionsLevel",1);
+  w.tagInt   ("serverChunkTickRange",  4);
+  w.tagFloat ("lightningTime",         0);
+  w.tagFloat ("rainTime",              0);
+  w.tagFloat ("rainLevel",             0);
+  w.tagFloat ("lightningLevel",        0);
+  w.tagIntList("MinimumCompatibleClientVersion",[1,21,0,0,0]);
+  w.tagIntList("lastOpenedWithVersion",[1,21,0,0,0]);
+  w.tagIntList("StorageVersionFormatVersion",[1,21,0,0,0]);
+
+  w.byte(TAG.End); // close root compound
+
+  const nbtData = w.toBytes();
+
+  // 8-byte header: version=10 (LE int32) + nbt length (LE int32)
+  const header = new Uint8Array(8);
+  const hv = new DataView(header.buffer);
+  hv.setInt32(0, 10, true);
+  hv.setInt32(4, nbtData.length, true);
+
+  const result = new Uint8Array(8 + nbtData.length);
+  result.set(header, 0);
+  result.set(nbtData, 8);
+  return result;
+}
+
+// ── MINIMAL ZIP PACKER ────────────────────────────────────────────────────────
+function buildZip(files) {
+  // files: [{path, data: Uint8Array}]
+  const enc = new TextEncoder();
+  let localParts = [];
+  let centralDir = [];
+  let offset = 0;
+
+  for (const file of files) {
+    const pathBytes = enc.encode(file.path);
+    const data = file.data;
+
+    // CRC32
+    const crc = crc32(data);
+
+    // Local file header
+    const local = new Uint8Array(30 + pathBytes.length + data.length);
+    const lv = new DataView(local.buffer);
+    let p = 0;
+    const ws = (off, val, size) => {
+      if (size===4) lv.setUint32(off, val, true);
+      else if (size===2) lv.setUint16(off, val, true);
+    };
+    // signature
+    local[p]=0x50;local[p+1]=0x4B;local[p+2]=0x03;local[p+3]=0x04; p+=4;
+    ws(p,20,2); p+=2;   // version needed
+    ws(p,0,2);  p+=2;   // flags
+    ws(p,0,2);  p+=2;   // compression: stored
+    ws(p,0,2);  p+=2;   // mod time
+    ws(p,0,2);  p+=2;   // mod date
+    ws(p,crc,4); p+=4;  // crc32
+    ws(p,data.length,4); p+=4; // compressed size
+    ws(p,data.length,4); p+=4; // uncompressed size
+    ws(p,pathBytes.length,2); p+=2; // filename length
+    ws(p,0,2); p+=2;    // extra length
+    local.set(pathBytes, p); p+=pathBytes.length;
+    local.set(data, p);
+
+    localParts.push(local);
+
+    // Central directory entry
+    const cd = new Uint8Array(46 + pathBytes.length);
+    const cv = new DataView(cd.buffer);
+    let cp = 0;
+    cd[cp]=0x50;cd[cp+1]=0x4B;cd[cp+2]=0x01;cd[cp+3]=0x02; cp+=4;
+    cv.setUint16(cp,20,true); cp+=2; // version made
+    cv.setUint16(cp,20,true); cp+=2; // version needed
+    cv.setUint16(cp,0,true);  cp+=2; // flags
+    cv.setUint16(cp,0,true);  cp+=2; // compression
+    cv.setUint16(cp,0,true);  cp+=2; // mod time
+    cv.setUint16(cp,0,true);  cp+=2; // mod date
+    cv.setUint32(cp,crc,true); cp+=4;
+    cv.setUint32(cp,data.length,true); cp+=4;
+    cv.setUint32(cp,data.length,true); cp+=4;
+    cv.setUint16(cp,pathBytes.length,true); cp+=2;
+    cv.setUint16(cp,0,true); cp+=2; // extra
+    cv.setUint16(cp,0,true); cp+=2; // comment
+    cv.setUint16(cp,0,true); cp+=2; // disk start
+    cv.setUint16(cp,0,true); cp+=2; // internal attr
+    cv.setUint32(cp,0,true); cp+=4; // external attr
+    cv.setUint32(cp,offset,true); cp+=4; // local header offset
+    cd.set(pathBytes, cp);
+
+    centralDir.push(cd);
+    offset += local.length;
+  }
+
+  const cdData = concat(centralDir);
+  const cdSize = cdData.length;
+  const cdOffset = offset;
+
+  // End of central directory record
+  const eocd = new Uint8Array(22);
+  const ev = new DataView(eocd.buffer);
+  eocd[0]=0x50;eocd[1]=0x4B;eocd[2]=0x05;eocd[3]=0x06;
+  ev.setUint16(4,0,true);
+  ev.setUint16(6,0,true);
+  ev.setUint16(8,files.length,true);
+  ev.setUint16(10,files.length,true);
+  ev.setUint32(12,cdSize,true);
+  ev.setUint32(16,cdOffset,true);
+  ev.setUint16(20,0,true);
+
+  return concat([...localParts, cdData, eocd]);
+}
+
+function concat(arrays) {
+  const total = arrays.reduce((s,a)=>s+a.length,0);
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const a of arrays) { out.set(a, off); off+=a.length; }
+  return out;
+}
+
+// CRC32 table
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let i=0;i<256;i++){
+    let c=i;
+    for(let j=0;j<8;j++) c=c&1?(0xEDB88320^(c>>>1)):(c>>>1);
+    t[i]=c;
+  }
+  return t;
+})();
+
+function crc32(data) {
+  let crc = 0xFFFFFFFF;
+  for (let i=0;i<data.length;i++) crc=CRC_TABLE[(crc^data[i])&0xFF]^(crc>>>8);
+  return (crc^0xFFFFFFFF)>>>0;
+}
+
+// ── MAIN GENERATE ─────────────────────────────────────────────────────────────
+function generateMcworld() {
+  const worldName = document.getElementById('world-name').value.trim() || 'My Flat World';
+
+  const flatJson = JSON.stringify({
+    biome_id: selectedBiome,
+    block_layers: layers.map(l=>({block_name:l.block, count:l.count})),
+    encoding_version: 6,
+    structure_options: null,
+    world_version: "version.post_1_18"
+  });
+
+  const levelDat  = buildLevelDat(worldName, flatJson, selectedBiome);
+  const manifest  = b64ToBytes(MANIFEST_B64);
+  const enc       = new TextEncoder();
+
+  const files = [
+    { path: "level.dat",          data: levelDat },
+    { path: "levelname.txt",      data: enc.encode(worldName) },
+    { path: "db/CURRENT",         data: enc.encode("MANIFEST-000001\n") },
+    { path: "db/LOCK",            data: new Uint8Array(0) },
+    { path: "db/MANIFEST-000001", data: manifest },
+    { path: "db/LOG",             data: enc.encode("") },
+  ];
+
+  const zipBytes = buildZip(files);
+  const blob = new Blob([zipBytes], { type: 'application/octet-stream' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = worldName.replace(/[^a-z0-9_\-]/gi,'_') + '.mcworld';
+  a.click();
+}
+
 </script>
 </body>
 </html>
