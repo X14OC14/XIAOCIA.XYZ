@@ -862,13 +862,13 @@ function buildLevelDat(worldName, flatLayersJson, biomeId) {
   // Root compound (unnamed for Bedrock level.dat)
   w.byte(TAG.Compound); w.int16(0); // type + empty name
 
-  w.tagInt   ("StorageVersion",        10);
+  w.tagInt   ("StorageVersion",        9);  // safe for 1.20+
   w.tagInt   ("NetworkVersion",        594);
   w.tagString("LevelName",             worldName);
   w.tagInt   ("GameType",              0);   // Survival
   w.tagInt   ("Difficulty",            1);   // Easy
   w.tagByte  ("ForceGameType",         0);
-  w.tagByte  ("Generator",             2);   // 2 = Flat
+  w.tagInt   ("Generator",             JSON.parse(flatLayersJson).block_layers.length >= 2 ? 2 : 5);   // 2=Flat, 5=Void
   w.tagString("FlatWorldLayers",       flatLayersJson);
   w.tagInt   ("SpawnX",                0);
   w.tagInt   ("SpawnY",                64);
@@ -939,7 +939,7 @@ function buildLevelDat(worldName, flatLayersJson, biomeId) {
   // 8-byte header: version=10 (LE int32) + nbt length (LE int32)
   const header = new Uint8Array(8);
   const hv = new DataView(header.buffer);
-  hv.setInt32(0, 10, true);
+  hv.setInt32(0, 3, true);
   hv.setInt32(4, nbtData.length, true);
 
   const result = new Uint8Array(8 + nbtData.length);
