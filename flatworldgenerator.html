@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flat World Generator — Bedrock</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --panel: #1a1a1a;
+    --border: #2e2e2e;
+    --accent: #5dfc8d;
+    --accent2: #fcb83d;
+    --accent3: #3dbffc;
+    --text: #e8e8e8;
+    --muted: #666;
+    --danger: #fc5d5d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    min-height: 100vh;
+    padding: 20px;
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(93,252,141,0.04) 0%, transparent 50%),
+      radial-gradient(circle at 90% 80%, rgba(61,191,252,0.04) 0%, transparent 50%);
+  }
+  h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    text-shadow: 0 0 20px rgba(93,252,141,0.4);
+  }
+  .subtitle { color: var(--muted); font-size: 16px; margin-bottom: 24px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    position: relative;
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    border-radius: 4px 4px 0 0;
+  }
+  .panel-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: var(--accent);
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+  }
+  label { color: var(--muted); font-size: 15px; display: block; margin-bottom: 4px; }
+  select, input[type="number"], input[type="text"] {
+    width: 100%;
+    background: #111;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'VT323', monospace;
+    font-size: 17px;
+    padding: 6px 10px;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+  }
+  select:focus, input:focus { border-color: var(--accent); }
+  .mb { margin-bottom: 12px; }
+  .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .preset-btn {
+    background: #111;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    padding: 8px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    text-align: left;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .preset-btn:hover { border-color: var(--accent2); color: var(--accent2); background: rgba(252,184,61,0.06); }
+  #layer-list {
+    min-height: 120px;
+    max-height: 340px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .layer-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #111;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    cursor: grab;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+  }
+  .layer-item:active { cursor: grabbing; }
+  .layer-item.drag-over { border-color: var(--accent); background: rgba(93,252,141,0.07); }
+  .layer-name { flex: 1; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .layer-count {
+    width: 52px !important;
+    text-align: center;
+    padding: 3px 6px !important;
+    font-size: 16px !important;
+  }
+  .layer-del {
+    background: none; border: none; color: var(--danger);
+    font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1;
+    opacity: 0.5; transition: opacity 0.15s;
+  }
+  .layer-del:hover { opacity: 1; }
+  .drag-handle { color: var(--muted); font-size: 14px; cursor: grab; }
+  .add-row { display: flex; gap: 8px; align-items: center; }
+  .add-row select, .add-row input[type="text"] { flex: 1; width: auto; }
+  .add-row input[type="number"] { width: 60px; flex-shrink: 0; }
+  .btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 10px 14px;
+    border-radius: 3px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-green { background: var(--accent); color: #000; }
+  .btn-green:hover { background: #7affa8; box-shadow: 0 0 12px rgba(93,252,141,0.3); }
+  .btn-blue { background: transparent; color: var(--accent3); border: 1px solid var(--accent3); }
+  .btn-blue:hover { background: rgba(61,191,252,0.1); }
+  .btn-row { display: flex; gap: 8px; margin-top: 8px; }
+  #world-preview {
+    width: 100%;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: #0a0a0a;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .preview-sky {
+    height: 54px;
+    background: linear-gradient(180deg, #111e38 0%, #1e2e50 100%);
+    display: flex;
+    align-items: flex-end;
+    padding: 0 10px 4px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.18);
+    font-family: 'Press Start 2P', monospace;
+  }
+  #preview-layers { display: flex; flex-direction: column-reverse; }
+  .preview-layer {
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    border-top: 1px solid rgba(0,0,0,0.4);
+    position: relative;
+    overflow: hidden;
+    min-height: 20px;
+  }
+  .preview-layer .plabel {
+    position: relative;
+    z-index: 1;
+    color: rgba(255,255,255,0.8);
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  }
+  #output-box {
+    background: #080808;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px;
+    font-size: 13px;
+    word-break: break-all;
+    color: var(--accent);
+    min-height: 80px;
+    max-height: 160px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    margin-bottom: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    transition: border-color 0.2s;
+  }
+  #output-box.copied { border-color: var(--accent); box-shadow: 0 0 10px rgba(93,252,141,0.2); }
+  .copy-hint { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+  .tag {
+    display: inline-block;
+    background: rgba(93,252,141,0.1);
+    border: 1px solid rgba(93,252,141,0.2);
+    color: var(--accent);
+    font-size: 13px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-right: 4px;
+  }
+  .notice {
+    background: rgba(252,184,61,0.07);
+    border: 1px solid rgba(252,184,61,0.2);
+    border-radius: 3px;
+    padding: 10px 12px;
+    font-size: 15px;
+    color: var(--accent2);
+    line-height: 1.5;
+    margin-top: 10px;
+  }
+  .empty-hint { color: var(--muted); font-size: 15px; text-align: center; padding: 20px; }
+  .void-badge {
+    font-size: 13px; padding: 2px 8px;
+    background: rgba(252,93,93,0.1); border: 1px solid rgba(252,93,93,0.2);
+    border-radius: 2px; color: var(--danger); margin-left: 8px; vertical-align: middle;
+  }
+  .header-area { max-width: 960px; margin: 0 auto 20px; }
+  .step-list { display: flex; flex-direction: column; gap: 14px; }
+  .step { display: flex; gap: 12px; align-items: flex-start; }
+  .step-num {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    background: var(--accent);
+    color: #000;
+    width: 26px; height: 26px;
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-body { flex: 1; }
+  .step-title { font-size: 17px; color: var(--text); margin-bottom: 3px; }
+  .step-desc { font-size: 15px; color: var(--muted); margin-bottom: 8px; line-height: 1.4; }
+  .step-desc code { color: var(--accent3); background: rgba(61,191,252,0.08); padding: 1px 5px; border-radius: 2px; }
+  .link-grid { display: flex; flex-direction: column; gap: 6px; }
+  .dl-link {
+    display: flex; align-items: center; gap: 10px;
+    background: #111; border: 1px solid var(--border);
+    border-radius: 3px; padding: 8px 10px;
+    color: var(--text); text-decoration: none;
+    font-size: 15px; line-height: 1.3;
+    transition: all 0.15s;
+  }
+  .dl-link:hover { border-color: var(--accent3); background: rgba(61,191,252,0.06); color: var(--accent3); }
+  .dl-link b { color: var(--text); display: block; }
+  .dl-link:hover b { color: var(--accent3); }
+  .dl-link small { color: var(--muted); font-size: 13px; }
+  .dl-icon { font-size: 20px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="header-area">
+  <h1>⛏ FLAT WORLD GEN</h1>
+  <div class="subtitle">Minecraft Bedrock Edition — FlatWorldLayers generator</div>
+</div>
+
+<div class="grid">
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <div class="panel">
+      <div class="panel-title">▸ PRESETS</div>
+      <div class="preset-grid" id="presets"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">▸ BIOME</div>
+      <div class="mb">
+        <label>Biome</label>
+        <select id="biome-select"></select>
+      </div>
+      <div style="color:var(--muted);font-size:14px;">Biome ID: <span id="biome-id-show" style="color:var(--accent3);">1</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">▸ OUTPUT — FlatWorldLayers JSON</div>
+      <div class="copy-hint">Copy → paste ke level.dat editor (key: FlatWorldLayers)</div>
+      <div id="output-box"></div>
+      <div class="btn-row">
+        <button class="btn btn-green" onclick="copyOutput()">COPY JSON</button>
+        <button class="btn btn-blue" onclick="downloadJSON()">DOWNLOAD .json</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">▸ HOW TO USE</div>
+      <div class="step-list">
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Download template void world</div>
+            <div class="step-desc">Butuh base <code>.mcworld</code> dulu buat diedit. Pilih salah satu:</div>
+            <div class="link-grid">
+              <a class="dl-link" href="https://www.curseforge.com/minecraft-bedrock/maps/void-world" target="_blank">
+                <span class="dl-icon">📦</span>
+                <span><b>CurseForge</b><br><small>Diupdate rutin, support 1.21+</small></span>
+              </a>
+              <a class="dl-link" href="https://www.universalminecrafttool.com/guides/void-world-bedrock-with-download" target="_blank">
+                <span class="dl-icon">🔧</span>
+                <span><b>Universal MC Tool</b><br><small>Ada guide + download sekalian</small></span>
+              </a>
+              <a class="dl-link" href="https://www.planetminecraft.com/project/bedrock-void-world/" target="_blank">
+                <span class="dl-icon">🌍</span>
+                <span><b>Planet Minecraft</b><br><small>Populer, banyak versi</small></span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Install NBT editor</div>
+            <div class="step-desc">Buat edit <code>FlatWorldLayers</code> di level.dat:</div>
+            <div class="link-grid">
+              <a class="dl-link" href="https://www.universalminecrafttool.com" target="_blank">
+                <span class="dl-icon">🛠</span>
+                <span><b>Universal Minecraft Tool</b><br><small>GUI friendly, recommended</small></span>
+              </a>
+              <a class="dl-link" href="https://github.com/tryashtar/universal-minecraft-editor" target="_blank">
+                <span class="dl-icon">⚙️</span>
+                <span><b>Universal MC Editor</b><br><small>Open source, gratis</small></span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Edit world</div>
+            <div class="step-desc">Buka <code>.mcworld</code> di editor → <span class="tag">World Settings</span> → scroll ke bawah → cari <span class="tag">FlatWorldLayers</span> → replace isinya dengan JSON dari tools ini → Save</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Buka di Minecraft</div>
+            <div class="step-desc">Import world yang sudah diedit → enjoy flat world custom lo! 🎮</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:16px;">
+
+    <div class="panel">
+      <div class="panel-title">▸ WORLD PREVIEW</div>
+      <div id="world-preview">
+        <div class="preview-sky">☁ sky</div>
+        <div id="preview-layers"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">▸ LAYERS <span id="void-badge" class="void-badge" style="display:none;">VOID</span></div>
+      <div id="layer-list"></div>
+
+      <div class="add-row mb">
+        <canvas id="block-preview-canvas" width="26" height="26" style="flex-shrink:0;"></canvas>
+        <select id="block-select" style="flex:1;width:auto;"></select>
+        <input type="number" id="block-count" value="1" min="1" max="255" style="width:58px;flex-shrink:0;">
+        <button class="btn btn-green" onclick="addLayer()" style="padding:8px 10px;">+ADD</button>
+      </div>
+
+      <div style="color:var(--muted);font-size:14px;margin-bottom:6px;">Custom block name:</div>
+      <div class="add-row">
+        <input type="text" id="custom-block" placeholder="minecraft:stone" style="flex:1;width:auto;">
+        <input type="number" id="custom-count" value="1" min="1" max="255" style="width:58px;flex-shrink:0;">
+        <button class="btn btn-blue" onclick="addCustomLayer()" style="padding:8px 10px;">+ADD</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── BLOCK DATA ───────────────────────────────────────────────────────────────
+const BLOCKS = [
+  {name:"minecraft:air",          label:"Air",             top:"#87CEEB",left:"#6aafcc",right:"#78bcd9"},
+  {name:"minecraft:bedrock",      label:"Bedrock",         top:"#4a4a4a",left:"#252525",right:"#363636"},
+  {name:"minecraft:stone",        label:"Stone",           top:"#9a9a9a",left:"#555555",right:"#777777"},
+  {name:"minecraft:deepslate",    label:"Deepslate",       top:"#6a6a72",left:"#35353e",right:"#4a4a55"},
+  {name:"minecraft:cobblestone",  label:"Cobblestone",     top:"#8a8a8a",left:"#484848",right:"#686868"},
+  {name:"minecraft:dirt",         label:"Dirt",            top:"#a0734a",left:"#5c3d24",right:"#7a5232"},
+  {name:"minecraft:coarse_dirt",  label:"Coarse Dirt",     top:"#8a6040",left:"#4e3020",right:"#6a4a2e"},
+  {name:"minecraft:grass_block",  label:"Grass Block",     top:"#5dbc2e",left:"#7a5232",right:"#a0734a"},
+  {name:"minecraft:podzol",       label:"Podzol",          top:"#8c5c2a",left:"#4a2e10",right:"#6a4020"},
+  {name:"minecraft:mycelium",     label:"Mycelium",        top:"#9a8a9a",left:"#504050",right:"#706070"},
+  {name:"minecraft:gravel",       label:"Gravel",          top:"#a09090",left:"#585050",right:"#787070"},
+  {name:"minecraft:sand",         label:"Sand",            top:"#dbd090",left:"#9a8e50",right:"#bcb070"},
+  {name:"minecraft:red_sand",     label:"Red Sand",        top:"#d07840",left:"#803820",right:"#a85030"},
+  {name:"minecraft:sandstone",    label:"Sandstone",       top:"#d4c460",left:"#8a7c30",right:"#b0a048"},
+  {name:"minecraft:snow_block",   label:"Snow Block",      top:"#f0f4f4",left:"#b0baba",right:"#d0dcdc"},
+  {name:"minecraft:ice",          label:"Ice",             top:"#aacce8",left:"#5080b0",right:"#7aaacc"},
+  {name:"minecraft:packed_ice",   label:"Packed Ice",      top:"#80b0d8",left:"#3060a0",right:"#5888bc"},
+  {name:"minecraft:blue_ice",     label:"Blue Ice",        top:"#4888d8",left:"#1840a0",right:"#3060bc"},
+  {name:"minecraft:water",        label:"Water",           top:"#2868c0",left:"#0a3080",right:"#1848a8"},
+  {name:"minecraft:lava",         label:"Lava",            top:"#e06010",left:"#902000",right:"#c04000"},
+  {name:"minecraft:obsidian",     label:"Obsidian",        top:"#200c38",left:"#0a0418",right:"#150828"},
+  {name:"minecraft:netherrack",   label:"Netherrack",      top:"#782828",left:"#3a0c0c",right:"#581818"},
+  {name:"minecraft:soul_sand",    label:"Soul Sand",       top:"#524028",left:"#2a1c08",right:"#3c2c14"},
+  {name:"minecraft:soul_soil",    label:"Soul Soil",       top:"#3c3820",left:"#1c1a08",right:"#2c2810"},
+  {name:"minecraft:end_stone",    label:"End Stone",       top:"#e0d898",left:"#908850",right:"#bab070"},
+  {name:"minecraft:oak_planks",   label:"Oak Planks",      top:"#c09850",left:"#705820",right:"#9a7830"},
+  {name:"minecraft:spruce_planks",label:"Spruce Planks",   top:"#805828",left:"#402808",right:"#603818"},
+  {name:"minecraft:birch_planks", label:"Birch Planks",    top:"#d8c878",left:"#887838",right:"#b0a058"},
+  {name:"minecraft:granite",      label:"Granite",         top:"#a86858",left:"#603028",right:"#884848"},
+  {name:"minecraft:diorite",      label:"Diorite",         top:"#c8c0b8",left:"#888078",right:"#a8a098"},
+  {name:"minecraft:andesite",     label:"Andesite",        top:"#888880",left:"#484840",right:"#686860"},
+  {name:"minecraft:clay",         label:"Clay",            top:"#9898b0",left:"#505068",right:"#707088"},
+  {name:"minecraft:moss_block",   label:"Moss Block",      top:"#587848",left:"#284018",right:"#406030"},
+  {name:"minecraft:terracotta",   label:"Terracotta",      top:"#a05840",left:"#582010",right:"#7a3828"},
+  {name:"minecraft:glowstone",    label:"Glowstone",       top:"#d8a840",left:"#906010",right:"#b88028"},
+  {name:"minecraft:glass",        label:"Glass",           top:"#c8e8f8",left:"#7090a8",right:"#98b8cc"},
+  {name:"minecraft:tuff",         label:"Tuff",            top:"#707068",left:"#383830",right:"#505048"},
+  {name:"minecraft:calcite",      label:"Calcite",         top:"#dcd8cc",left:"#989080",right:"#bcb8a8"},
+  {name:"minecraft:dripstone_block",label:"Dripstone",     top:"#908078",left:"#504038",right:"#705858"},
+  {name:"minecraft:magma",        label:"Magma",           top:"#c84018",left:"#780808",right:"#a02010"},
+  {name:"minecraft:nether_bricks",label:"Nether Bricks",   top:"#2c1020",left:"#100008",right:"#1e0818"},
+  {name:"minecraft:quartz_block", label:"Quartz Block",    top:"#e8e0d8",left:"#a09888",right:"#c8c0b0"},
+  {name:"minecraft:prismarine",   label:"Prismarine",      top:"#5aaa98",left:"#206858",right:"#3a8870"},
+  {name:"minecraft:purpur_block", label:"Purpur Block",    top:"#a870a8",left:"#603868",right:"#885088"},
+  {name:"minecraft:sponge",       label:"Sponge",          top:"#c8c840",left:"#787810",right:"#a8a828"},
+];
+
+const BIOMES = [
+  {id:1,name:"Plains"},{id:2,name:"Desert"},{id:3,name:"Windswept Hills"},
+  {id:4,name:"Forest"},{id:5,name:"Taiga"},{id:6,name:"Swamp"},
+  {id:7,name:"River"},{id:10,name:"Frozen Ocean"},{id:11,name:"Frozen River"},
+  {id:12,name:"Snowy Plains"},{id:14,name:"Mushroom Fields"},
+  {id:16,name:"Beach"},{id:21,name:"Jungle"},{id:23,name:"Sparse Jungle"},
+  {id:24,name:"Deep Ocean"},{id:25,name:"Stone Shore"},{id:26,name:"Snowy Beach"},
+  {id:27,name:"Birch Forest"},{id:29,name:"Dark Forest"},
+  {id:30,name:"Snowy Taiga"},{id:32,name:"Old Growth Pine Taiga"},
+  {id:35,name:"Savanna"},{id:37,name:"Badlands"},{id:38,name:"Wooded Badlands"},
+  {id:43,name:"Warm Ocean"},{id:44,name:"Lukewarm Ocean"},{id:45,name:"Cold Ocean"},
+  {id:46,name:"Deep Warm Ocean"},{id:47,name:"Deep Lukewarm Ocean"},
+  {id:49,name:"Deep Frozen Ocean"},{id:140,name:"Ice Spikes"},
+  {id:149,name:"Bamboo Jungle"},{id:166,name:"Shattered Savanna"},
+  {id:168,name:"Eroded Badlands"},{id:171,name:"Soul Sand Valley"},
+  {id:172,name:"Crimson Forest"},{id:173,name:"Warped Forest"},
+  {id:174,name:"Basalt Deltas"},{id:177,name:"Dripstone Caves"},
+  {id:178,name:"Lush Caves"},{id:182,name:"Frozen Peaks"},
+  {id:183,name:"Jagged Peaks"},{id:184,name:"Stony Peaks"},
+  {id:185,name:"Snowy Slopes"},{id:186,name:"Meadow"},
+  {id:187,name:"Grove"},{id:188,name:"Cherry Grove"},
+  {id:190,name:"Deep Dark"},{id:0,name:"The Void"},
+];
+
+const PRESETS = [
+  { label:"Classic Flat", topBlock:"minecraft:grass_block",
+    layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:dirt",count:2},{block:"minecraft:grass_block",count:1}], biome:1 },
+  { label:"Void",         topBlock:null,
+    layers:[], biome:0 },
+  { label:"All Stone",    topBlock:"minecraft:stone",
+    layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:stone",count:3}], biome:1 },
+  { label:"Desert",       topBlock:"minecraft:sand",
+    layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:sandstone",count:2},{block:"minecraft:sand",count:2}], biome:2 },
+  { label:"Snowy",        topBlock:"minecraft:snow_block",
+    layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:stone",count:2},{block:"minecraft:dirt",count:2},{block:"minecraft:snow_block",count:1}], biome:12 },
+  { label:"Nether",       topBlock:"minecraft:netherrack",
+    layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:netherrack",count:3},{block:"minecraft:soul_sand",count:1}], biome:171 },
+  { label:"Ocean Floor",  topBlock:"minecraft:water",
+    layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:gravel",count:3},{block:"minecraft:water",count:5}], biome:44 },
+  { label:"End",          topBlock:"minecraft:end_stone",
+    layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:end_stone",count:3}], biome:9 },
+];
+
+// ── ISO CUBE RENDERER ────────────────────────────────────────────────────────
+function drawIsoCube(ctx, cx, cy, s, topC, leftC, rightC) {
+  const h = s * 0.55;
+  // top face
+  ctx.beginPath();
+  ctx.moveTo(cx,     cy);
+  ctx.lineTo(cx+s,   cy+h);
+  ctx.lineTo(cx,     cy+h*2);
+  ctx.lineTo(cx-s,   cy+h);
+  ctx.closePath();
+  ctx.fillStyle = topC; ctx.fill();
+  // left face
+  ctx.beginPath();
+  ctx.moveTo(cx-s,   cy+h);
+  ctx.lineTo(cx,     cy+h*2);
+  ctx.lineTo(cx,     cy+h*2+s);
+  ctx.lineTo(cx-s,   cy+h+s);
+  ctx.closePath();
+  ctx.fillStyle = leftC; ctx.fill();
+  // right face
+  ctx.beginPath();
+  ctx.moveTo(cx+s,   cy+h);
+  ctx.lineTo(cx,     cy+h*2);
+  ctx.lineTo(cx,     cy+h*2+s);
+  ctx.lineTo(cx+s,   cy+h+s);
+  ctx.closePath();
+  ctx.fillStyle = rightC; ctx.fill();
+  // edges
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(cx,cy); ctx.lineTo(cx+s,cy+h); ctx.lineTo(cx,cy+h*2); ctx.lineTo(cx-s,cy+h); ctx.closePath();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx,cy+h*2); ctx.lineTo(cx,cy+h*2+s); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx-s,cy+h); ctx.lineTo(cx-s,cy+h+s); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx+s,cy+h); ctx.lineTo(cx+s,cy+h+s); ctx.stroke();
+}
+
+function getBlock(name) {
+  return BLOCKS.find(b=>b.name===name) || {label:name.replace('minecraft:',''),top:'#888',left:'#444',right:'#666'};
+}
+
+function isoCanvasEl(blockName, size) {
+  const b = getBlock(blockName);
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  c.style.cssText = `image-rendering:pixelated;flex-shrink:0;display:block;`;
+  const ctx = c.getContext('2d');
+  const s = size * 0.40;
+  drawIsoCube(ctx, size/2, size*0.05, s, b.top, b.left, b.right);
+  return c;
+}
+
+function paintIsoOnCanvas(canvas, blockName) {
+  const b = getBlock(blockName);
+  const w = canvas.offsetWidth || parseInt(canvas.getAttribute('width')) || 26;
+  const h = canvas.offsetHeight || parseInt(canvas.getAttribute('height')) || 26;
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,w,h);
+  const s = w * 0.40;
+  drawIsoCube(ctx, w/2, h*0.05, s, b.top, b.left, b.right);
+}
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let layers = [
+  {block:"minecraft:bedrock",count:1},
+  {block:"minecraft:dirt",count:2},
+  {block:"minecraft:grass_block",count:1}
+];
+let selectedBiome = 1;
+let dragSrc = null;
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  // Biome select
+  const bs = document.getElementById('biome-select');
+  BIOMES.forEach(b => {
+    const o = document.createElement('option');
+    o.value = b.id;
+    o.textContent = `${b.name} (${b.id})`;
+    if (b.id===1) o.selected=true;
+    bs.appendChild(o);
+  });
+  bs.addEventListener('change', () => {
+    selectedBiome = parseInt(bs.value);
+    document.getElementById('biome-id-show').textContent = selectedBiome;
+    updateOutput();
+  });
+
+  // Block select
+  const blk = document.getElementById('block-select');
+  BLOCKS.forEach(b => {
+    const o = document.createElement('option');
+    o.value = b.name; o.textContent = b.label;
+    blk.appendChild(o);
+  });
+  const previewC = document.getElementById('block-preview-canvas');
+  const refreshPrev = () => requestAnimationFrame(() => paintIsoOnCanvas(previewC, blk.value));
+  blk.addEventListener('change', refreshPrev);
+
+  // Presets
+  const pg = document.getElementById('presets');
+  PRESETS.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn';
+    if (p.topBlock) btn.appendChild(isoCanvasEl(p.topBlock, 22));
+    else {
+      // void — small dark square
+      const c = document.createElement('canvas');
+      c.width=22; c.height=22;
+      c.style.cssText='flex-shrink:0;display:block;border-radius:2px;';
+      const ctx=c.getContext('2d');
+      ctx.fillStyle='#111'; ctx.fillRect(0,0,22,22);
+      ctx.strokeStyle='#444'; ctx.lineWidth=1; ctx.strokeRect(0.5,0.5,21,21);
+      btn.appendChild(c);
+    }
+    const span = document.createElement('span');
+    span.textContent = p.label;
+    btn.appendChild(span);
+    btn.onclick = () => applyPreset(p);
+    pg.appendChild(btn);
+  });
+
+  renderAll();
+  requestAnimationFrame(() => paintIsoOnCanvas(previewC, blk.value));
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderLayerList();
+  renderPreview();
+  updateOutput();
+  document.getElementById('void-badge').style.display = layers.length===0 ? 'inline' : 'none';
+}
+
+function renderLayerList() {
+  const list = document.getElementById('layer-list');
+  if (layers.length===0) {
+    list.innerHTML='<div class="empty-hint">No layers — Void world</div>';
+    return;
+  }
+  list.innerHTML='';
+  layers.forEach((l,i) => {
+    const item = document.createElement('div');
+    item.className='layer-item';
+    item.draggable=true;
+
+    const handle=document.createElement('span');
+    handle.className='drag-handle'; handle.textContent='⠿';
+    item.appendChild(handle);
+
+    item.appendChild(isoCanvasEl(l.block, 24));
+
+    const name=document.createElement('span');
+    name.className='layer-name';
+    name.textContent=getBlock(l.block).label;
+    item.appendChild(name);
+
+    const cnt=document.createElement('input');
+    cnt.type='number'; cnt.className='layer-count';
+    cnt.value=l.count; cnt.min=1; cnt.max=255;
+    cnt.addEventListener('change', e=>{
+      layers[i].count=Math.max(1,Math.min(255,parseInt(e.target.value)||1));
+      renderAll();
+    });
+    item.appendChild(cnt);
+
+    const del=document.createElement('button');
+    del.className='layer-del'; del.textContent='✕'; del.title='Remove';
+    del.onclick=()=>removeLayer(i);
+    item.appendChild(del);
+
+    item.addEventListener('dragstart',()=>{ dragSrc=i; item.style.opacity='0.4'; });
+    item.addEventListener('dragend',()=>{ item.style.opacity='1'; document.querySelectorAll('.layer-item').forEach(e=>e.classList.remove('drag-over')); });
+    item.addEventListener('dragover',e=>{ e.preventDefault(); item.classList.add('drag-over'); });
+    item.addEventListener('dragleave',()=>item.classList.remove('drag-over'));
+    item.addEventListener('drop',e=>{
+      e.preventDefault();
+      if(dragSrc!==null && dragSrc!==i){
+        const m=layers.splice(dragSrc,1)[0];
+        layers.splice(i,0,m);
+        renderAll();
+      }
+    });
+
+    list.appendChild(item);
+  });
+}
+
+function renderPreview() {
+  const pl = document.getElementById('preview-layers');
+  pl.innerHTML='';
+  if(layers.length===0){
+    pl.innerHTML='<div class="empty-hint">Void — no blocks</div>';
+    return;
+  }
+  const total=layers.reduce((a,b)=>a+b.count,0);
+  const maxH=280;
+  layers.forEach(l=>{
+    const hpx=Math.max(22,Math.round((l.count/total)*maxH));
+    const b=getBlock(l.block);
+
+    const div=document.createElement('div');
+    div.className='preview-layer';
+    div.style.height=hpx+'px';
+
+    // Canvas for tiled iso cubes
+    const bg=document.createElement('canvas');
+    bg.style.cssText='position:absolute;inset:0;width:100%;height:100%;';
+    div.appendChild(bg);
+
+    const lbl=document.createElement('span');
+    lbl.className='plabel';
+    lbl.textContent=`${b.label} ×${l.count}`;
+    div.appendChild(lbl);
+
+    pl.appendChild(div);
+
+    requestAnimationFrame(()=>{
+      const W=bg.offsetWidth||200;
+      const H=bg.offsetHeight||hpx;
+      bg.width=W; bg.height=H;
+      const ctx=bg.getContext('2d');
+      // fill base color first
+      ctx.fillStyle=b.top+'33';
+      ctx.fillRect(0,0,W,H);
+      // tile iso cubes across
+      const cs=Math.max(18,Math.min(hpx*1.5,32));
+      const s=cs*0.40;
+      const ch=s*0.55*2+s; // total cube height approx
+      const stepX=cs*0.88;
+      const yc=H/2 - ch/2 + s*0.55;
+      for(let x=-cs;x<W+cs;x+=stepX){
+        drawIsoCube(ctx, x, yc, s, b.top, b.left, b.right);
+      }
+    });
+  });
+}
+
+function updateOutput() {
+  const obj={
+    biome_id:selectedBiome,
+    block_layers:layers.map(l=>({block_name:l.block,count:l.count})),
+    encoding_version:6,
+    structure_options:null,
+    world_version:"version.post_1_18"
+  };
+  document.getElementById('output-box').textContent=JSON.stringify(obj);
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+function addLayer(){
+  const b=document.getElementById('block-select').value;
+  const c=Math.max(1,Math.min(255,parseInt(document.getElementById('block-count').value)||1));
+  layers.push({block:b,count:c});
+  renderAll();
+}
+
+function addCustomLayer(){
+  let b=document.getElementById('custom-block').value.trim();
+  if(!b)return;
+  if(!b.includes(':'))b='minecraft:'+b;
+  const c=Math.max(1,Math.min(255,parseInt(document.getElementById('custom-count').value)||1));
+  layers.push({block:b,count:c});
+  document.getElementById('custom-block').value='';
+  renderAll();
+}
+
+function removeLayer(i){ layers.splice(i,1); renderAll(); }
+
+function applyPreset(p){
+  layers=p.layers.map(l=>({...l}));
+  selectedBiome=p.biome;
+  const bs=document.getElementById('biome-select');
+  bs.value=p.biome;
+  document.getElementById('biome-id-show').textContent=p.biome;
+  renderAll();
+}
+
+function copyOutput(){
+  const t=document.getElementById('output-box').textContent;
+  navigator.clipboard.writeText(t).then(()=>{
+    const box=document.getElementById('output-box');
+    const orig=box.textContent;
+    box.classList.add('copied');
+    box.textContent='✓ Copied!';
+    setTimeout(()=>{ box.textContent=orig; box.classList.remove('copied'); },1400);
+  });
+}
+
+function downloadJSON(){
+  const t=document.getElementById('output-box').textContent;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));
+  a.download='FlatWorldLayers.json';
+  a.click();
+}
+
+init();
+</script>
+</body>
+</html>
