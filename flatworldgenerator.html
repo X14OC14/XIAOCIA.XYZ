@@ -857,7 +857,7 @@ class NBTWriter {
   toBytes() { return new Uint8Array(this.buf); }
 }
 
-function buildLevelDat(worldName, flatLayersJson, biomeId) {
+function buildLevelDat(worldName, flatLayersJson, biomeId, biomeOverride) {
   const w = new NBTWriter();
   // Root compound (unnamed for Bedrock level.dat)
   w.byte(TAG.Compound); w.int16(0); // type + empty name
@@ -865,11 +865,12 @@ function buildLevelDat(worldName, flatLayersJson, biomeId) {
   w.tagInt   ("StorageVersion",        9);  // safe for 1.20+
   w.tagInt   ("NetworkVersion",        594);
   w.tagString("LevelName",             worldName);
-  w.tagInt   ("GameType",              0);   // Survival
+  w.tagInt   ("GameType",              1);   // Creative
   w.tagInt   ("Difficulty",            1);   // Easy
   w.tagByte  ("ForceGameType",         0);
   w.tagInt   ("Generator",             JSON.parse(flatLayersJson).block_layers.length >= 2 ? 2 : 5);   // 2=Flat, 5=Void
   w.tagString("FlatWorldLayers",       flatLayersJson);
+  if (biomeOverride) w.tagString("BiomeOverride", biomeOverride);
   w.tagInt   ("SpawnX",                0);
   w.tagInt   ("SpawnY",                64);
   w.tagInt   ("SpawnZ",                0);
@@ -1072,7 +1073,10 @@ function generateMcworld() {
     world_version: "version.post_1_18"
   });
 
-  const levelDat  = buildLevelDat(worldName, flatJson, selectedBiome);
+  // Find biome name for BiomeOverride tag
+  const biomeEntry = BIOMES.find(b => b.id === selectedBiome);
+  const biomeOverride = biomeEntry ? 'minecraft:' + biomeEntry.name.toLowerCase().replace(/ /g,'_') : '';
+  const levelDat  = buildLevelDat(worldName, flatJson, selectedBiome, biomeOverride);
   const manifest  = b64ToBytes(MANIFEST_B64);
   const enc       = new TextEncoder();
 
