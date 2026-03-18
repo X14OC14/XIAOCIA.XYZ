@@ -644,10 +644,14 @@ function renderLayerList() {
     return;
   }
   list.innerHTML='';
-  layers.forEach((l,i) => {
+  // Render top-to-bottom visually = highest index (top block) first
+  const indices = [...Array(layers.length).keys()].reverse();
+  indices.forEach(i => {
+    const l = layers[i];
     const item = document.createElement('div');
     item.className='layer-item';
     item.draggable=true;
+    item.dataset.idx=i;
 
     const handle=document.createElement('span');
     handle.className='drag-handle'; handle.textContent='⠿';
