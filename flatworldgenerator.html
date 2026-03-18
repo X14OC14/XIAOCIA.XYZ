@@ -7,267 +7,126 @@
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f0f0f;
-    --panel: #1a1a1a;
-    --border: #2e2e2e;
-    --accent: #5dfc8d;
-    --accent2: #fcb83d;
-    --accent3: #3dbffc;
-    --text: #e8e8e8;
-    --muted: #666;
+    --bg: #050508;
+    --glass: rgba(255,255,255,0.07);
+    --glass-border: rgba(255,255,255,0.12);
+    --accent: #e0607e;
+    --accent2: #f0a060;
+    --accent3: #c084e0;
+    --text: #f0eef5;
+    --muted: #9088a0;
     --danger: #fc5d5d;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'VT323', monospace;
-    font-size: 18px;
-    min-height: 100vh;
-    padding: 20px;
-    background-image:
-      radial-gradient(circle at 10% 20%, rgba(93,252,141,0.04) 0%, transparent 50%),
-      radial-gradient(circle at 90% 80%, rgba(61,191,252,0.04) 0%, transparent 50%);
-  }
-  h1 {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 14px;
-    color: var(--accent);
-    letter-spacing: 1px;
-    margin-bottom: 4px;
-    text-shadow: 0 0 20px rgba(93,252,141,0.4);
-  }
+  html, body { height: 100%; background: var(--bg); }
+  body { color: var(--text); font-family: 'VT323', monospace; font-size: 18px; min-height: 100vh; padding: 20px; overflow-x: hidden; position: relative; }
+  #wave-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .header-area, .grid, .changelog-overlay { position: relative; z-index: 1; }
+  h1 { font-family: 'Press Start 2P', monospace; font-size: 14px; color: var(--accent); letter-spacing: 1px; margin-bottom: 4px; text-shadow: 0 0 20px rgba(224,96,126,0.35); }
   .subtitle { color: var(--muted); font-size: 16px; margin-bottom: 24px; }
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    max-width: 960px;
-    margin: 0 auto;
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 960px; margin: 0 auto; }
+  /* ── DESKTOP ── */
+  @media (min-width: 701px) {
+    body { padding: 32px; font-size: 18px; }
+    .header-area { margin-bottom: 28px; }
+    h1 { font-size: 16px; }
+    .subtitle { font-size: 17px; }
+    .panel { padding: 20px; border-radius: 20px; }
+    .preset-btn { font-size: 16px; padding: 10px 12px; }
+    select, input[type="number"], input[type="text"] { font-size: 18px; padding: 8px 12px; }
+    .btn { font-size: 10px; padding: 12px 18px; }
+    #layer-list { max-height: 420px; }
   }
-  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
-  .panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 16px;
-    position: relative;
+
+  /* ── MOBILE ── */
+  @media (max-width: 700px) {
+    .grid { grid-template-columns: 1fr; }
+    body { padding: 14px; font-size: 17px; }
+    h1 { font-size: 11px; letter-spacing: 0.5px; }
+    .subtitle { font-size: 15px; margin-bottom: 16px; }
+    .header-area { margin-bottom: 14px; }
+    .panel { padding: 14px; border-radius: 14px; }
+    .panel-title { font-size: 8px; margin-bottom: 10px; }
+    .preset-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .preset-btn { font-size: 14px; padding: 8px; }
+    select, input[type="number"], input[type="text"] { font-size: 16px; padding: 8px 10px; border-radius: 10px; }
+    .layer-item { padding: 8px 10px; border-radius: 10px; }
+    .layer-name { font-size: 15px; }
+    .btn { font-size: 8px; padding: 10px 12px; border-radius: 8px; }
+    .btn-green { width: 100%; justify-content: center; display: block; text-align: center; padding: 14px; font-size: 9px; }
+    .add-row { flex-wrap: wrap; }
+    .add-row input[type="number"] { width: 52px; }
+    #layer-list { max-height: 240px; }
+    .step-list { gap: 10px; }
+    .step-num { width: 22px; height: 22px; font-size: 9px; }
+    .step-title { font-size: 15px; }
+    .step-desc { font-size: 13px; }
+    .changelog-box { border-radius: 14px; padding: 18px; }
+    .changelog-title { font-size: 9px; }
+    .changelog-ver { font-size: 7px; }
+    .changelog-items li { font-size: 14px; }
+    .dl-link { font-size: 14px; padding: 8px; }
   }
-  .panel::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), transparent);
-    border-radius: 4px 4px 0 0;
-  }
-  .panel-title {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 9px;
-    color: var(--accent);
-    margin-bottom: 14px;
-    letter-spacing: 1px;
-  }
+  .panel { background: rgba(255,255,255,0.06); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255,255,255,0.13); border-radius: 16px; padding: 16px; position: relative; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08); }
+  .panel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, var(--accent), transparent 60%); }
+  .panel-title { font-family: 'Press Start 2P', monospace; font-size: 9px; color: var(--accent); margin-bottom: 14px; letter-spacing: 1px; }
   label { color: var(--muted); font-size: 15px; display: block; margin-bottom: 4px; }
-  select, input[type="number"], input[type="text"] {
-    width: 100%;
-    background: #111;
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'VT323', monospace;
-    font-size: 17px;
-    padding: 6px 10px;
-    border-radius: 3px;
-    outline: none;
-    transition: border-color 0.15s;
-    appearance: none;
-  }
-  select:focus, input:focus { border-color: var(--accent); }
+  select, input[type="number"], input[type="text"] { width: 100%; background: rgba(0,0,0,0.35); border: 1px solid var(--glass-border); color: var(--text); font-family: 'VT323', monospace; font-size: 17px; padding: 6px 10px; border-radius: 8px; outline: none; transition: border-color 0.15s; appearance: none; backdrop-filter: blur(4px); }
+  select:focus, input:focus { border-color: rgba(224,96,126,0.5); }
   .mb { margin-bottom: 12px; }
   .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .preset-btn {
-    background: #111;
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'VT323', monospace;
-    font-size: 15px;
-    padding: 8px 10px;
-    cursor: pointer;
-    border-radius: 3px;
-    text-align: left;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .preset-btn:hover { border-color: var(--accent2); color: var(--accent2); background: rgba(252,184,61,0.06); }
-  #layer-list {
-    min-height: 120px;
-    max-height: 340px;
-    overflow-y: auto;
-    margin-bottom: 12px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-  .layer-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #111;
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 6px 10px;
-    margin-bottom: 6px;
-    cursor: grab;
-    transition: border-color 0.15s, background 0.15s;
-    user-select: none;
-  }
+  .preset-btn { background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: var(--text); font-family: 'VT323', monospace; font-size: 15px; padding: 8px 10px; cursor: pointer; border-radius: 8px; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(4px); }
+  .preset-btn:hover { border-color: rgba(240,160,96,0.4); color: var(--accent2); background: rgba(240,160,96,0.06); }
+  #layer-list { min-height: 120px; max-height: 340px; overflow-y: auto; margin-bottom: 12px; scrollbar-width: thin; scrollbar-color: var(--glass-border) transparent; }
+  .layer-item { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px 10px; margin-bottom: 6px; cursor: grab; transition: border-color 0.15s, background 0.15s; user-select: none; backdrop-filter: blur(4px); }
   .layer-item:active { cursor: grabbing; }
-  .layer-item.drag-over { border-color: var(--accent); background: rgba(93,252,141,0.07); }
+  .layer-item.drag-over { border-color: rgba(224,96,126,0.5); background: rgba(224,96,126,0.05); }
   .layer-name { flex: 1; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .layer-count {
-    width: 52px !important;
-    text-align: center;
-    padding: 3px 6px !important;
-    font-size: 16px !important;
-  }
-  .layer-del {
-    background: none; border: none; color: var(--danger);
-    font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1;
-    opacity: 0.5; transition: opacity 0.15s;
-  }
+  .layer-count { width: 52px !important; text-align: center; padding: 3px 6px !important; font-size: 16px !important; }
+  .layer-del { background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1; opacity: 0.4; transition: opacity 0.15s; }
   .layer-del:hover { opacity: 1; }
   .drag-handle { color: var(--muted); font-size: 14px; cursor: grab; }
   .add-row { display: flex; gap: 8px; align-items: center; }
   .add-row select, .add-row input[type="text"] { flex: 1; width: auto; }
   .add-row input[type="number"] { width: 60px; flex-shrink: 0; }
-  .btn {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 9px;
-    padding: 10px 14px;
-    border-radius: 3px;
-    border: none;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
+  .btn { font-family: 'Press Start 2P', monospace; font-size: 9px; padding: 10px 14px; border-radius: 8px; border: none; cursor: pointer; letter-spacing: 0.5px; transition: all 0.15s; white-space: nowrap; }
   .btn-green { background: var(--accent); color: #000; }
-  .btn-green:hover { background: #7affa8; box-shadow: 0 0 12px rgba(93,252,141,0.3); }
-  .btn-blue { background: transparent; color: var(--accent3); border: 1px solid var(--accent3); }
-  .btn-blue:hover { background: rgba(61,191,252,0.1); }
+  .btn-green:hover { background: #e8809a; box-shadow: 0 0 16px rgba(224,96,126,0.25); }
+  .btn-blue { background: transparent; color: var(--accent3); border: 1px solid rgba(192,132,224,0.4); }
+  .btn-blue:hover { background: rgba(192,132,224,0.08); }
   .btn-row { display: flex; gap: 8px; margin-top: 8px; }
-  #world-preview {
-    width: 100%;
-    border-radius: 3px;
-    border: 1px solid var(--border);
-    background: #0a0a0a;
-    overflow: hidden;
-    margin-bottom: 12px;
-  }
-  .preview-sky {
-    height: 54px;
-    background: linear-gradient(180deg, #111e38 0%, #1e2e50 100%);
-    display: flex;
-    align-items: flex-end;
-    padding: 0 10px 4px;
-    font-size: 13px;
-    color: rgba(255,255,255,0.18);
-    font-family: 'Press Start 2P', monospace;
-  }
+  #world-preview { width: 100%; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.5); overflow: hidden; margin-bottom: 12px; }
+  .preview-sky { height: 54px; background: linear-gradient(180deg, rgba(10,20,48,0.9) 0%, rgba(20,36,70,0.9) 100%); display: flex; align-items: flex-end; padding: 0 10px 4px; font-size: 13px; color: rgba(255,255,255,0.15); font-family: 'Press Start 2P', monospace; }
   #preview-layers { display: flex; flex-direction: column-reverse; }
-  .preview-layer {
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    border-top: 1px solid rgba(0,0,0,0.4);
-    position: relative;
-    overflow: hidden;
-    min-height: 20px;
-  }
-  .preview-layer .plabel {
-    position: relative;
-    z-index: 1;
-    color: rgba(255,255,255,0.8);
-    font-size: 14px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
-  }
-  #output-box {
-    background: #080808;
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    padding: 12px;
-    font-size: 13px;
-    word-break: break-all;
-    color: var(--accent);
-    min-height: 80px;
-    max-height: 160px;
-    overflow-y: auto;
-    white-space: pre-wrap;
-    margin-bottom: 10px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-    transition: border-color 0.2s;
-  }
-  #output-box.copied { border-color: var(--accent); box-shadow: 0 0 10px rgba(93,252,141,0.2); }
-  .copy-hint { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
-  .tag {
-    display: inline-block;
-    background: rgba(93,252,141,0.1);
-    border: 1px solid rgba(93,252,141,0.2);
-    color: var(--accent);
-    font-size: 13px;
-    padding: 2px 8px;
-    border-radius: 2px;
-    margin-right: 4px;
-  }
-  .notice {
-    background: rgba(252,184,61,0.07);
-    border: 1px solid rgba(252,184,61,0.2);
-    border-radius: 3px;
-    padding: 10px 12px;
-    font-size: 15px;
-    color: var(--accent2);
-    line-height: 1.5;
-    margin-top: 10px;
-  }
+  .preview-layer { display: flex; align-items: center; padding: 0 10px; border-top: 1px solid rgba(0,0,0,0.4); position: relative; overflow: hidden; min-height: 20px; }
+  .preview-layer .plabel { position: relative; z-index: 1; color: rgba(255,255,255,0.8); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
+  .tag { display: inline-block; background: rgba(224,96,126,0.08); border: 1px solid rgba(224,96,126,0.2); color: var(--accent); font-size: 13px; padding: 2px 8px; border-radius: 4px; margin-right: 4px; }
+  .notice { background: rgba(240,160,96,0.05); border: 1px solid rgba(240,160,96,0.15); border-radius: 8px; padding: 10px 12px; font-size: 15px; color: var(--accent2); line-height: 1.5; margin-top: 10px; }
   .empty-hint { color: var(--muted); font-size: 15px; text-align: center; padding: 20px; }
-  .void-badge {
-    font-size: 13px; padding: 2px 8px;
-    background: rgba(252,93,93,0.1); border: 1px solid rgba(252,93,93,0.2);
-    border-radius: 2px; color: var(--danger); margin-left: 8px; vertical-align: middle;
-  }
+  .void-badge { font-size: 13px; padding: 2px 8px; background: rgba(252,93,93,0.08); border: 1px solid rgba(252,93,93,0.2); border-radius: 4px; color: var(--danger); margin-left: 8px; vertical-align: middle; }
   .header-area { max-width: 960px; margin: 0 auto 20px; }
+  .version-badge { display: inline-block; font-family: 'Press Start 2P', monospace; font-size: 8px; color: var(--muted); cursor: pointer; padding: 3px 7px; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; margin-top: 6px; transition: all 0.15s; user-select: none; background: var(--glass); backdrop-filter: blur(8px); }
+  .version-badge:hover { color: var(--accent); border-color: rgba(224,96,126,0.4); }
+  .changelog-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 999; align-items: center; justify-content: center; padding: 20px; }
+  .changelog-overlay.open { display: flex; }
+  .changelog-box { background: rgba(10,10,15,0.85); backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%); border: 1px solid var(--glass-border); border-radius: 20px; padding: 24px; max-width: 520px; width: 100%; max-height: 80vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--glass-border) transparent; position: relative; }
+  .changelog-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, var(--accent), transparent 60%); border-radius: 20px 20px 0 0; }
+  .changelog-title { font-family: 'Press Start 2P', monospace; font-size: 10px; color: var(--accent); margin-bottom: 20px; letter-spacing: 1px; }
+  .changelog-entry { margin-bottom: 16px; }
+  .changelog-ver { font-family: 'Press Start 2P', monospace; font-size: 8px; color: var(--accent2); margin-bottom: 6px; }
+  .changelog-items { list-style: none; padding: 0; }
+  .changelog-items li { font-size: 15px; color: var(--muted); padding: 2px 0 2px 14px; position: relative; line-height: 1.4; }
+  .changelog-items li::before { content: '▸'; position: absolute; left: 0; color: rgba(255,255,255,0.15); font-size: 12px; }
   .step-list { display: flex; flex-direction: column; gap: 14px; }
   .step { display: flex; gap: 12px; align-items: flex-start; }
-  .step-num {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 11px;
-    background: var(--accent);
-    color: #000;
-    width: 26px; height: 26px;
-    border-radius: 3px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
+  .step-num { font-family: 'Press Start 2P', monospace; font-size: 11px; background: var(--accent); color: #000; width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
   .step-body { flex: 1; }
   .step-title { font-size: 17px; color: var(--text); margin-bottom: 3px; }
   .step-desc { font-size: 15px; color: var(--muted); margin-bottom: 8px; line-height: 1.4; }
-  .step-desc code { color: var(--accent3); background: rgba(61,191,252,0.08); padding: 1px 5px; border-radius: 2px; }
+  .step-desc code { color: var(--accent3); background: rgba(192,132,224,0.08); padding: 1px 5px; border-radius: 3px; }
   .link-grid { display: flex; flex-direction: column; gap: 6px; }
-  .dl-link {
-    display: flex; align-items: center; gap: 10px;
-    background: #111; border: 1px solid var(--border);
-    border-radius: 3px; padding: 8px 10px;
-    color: var(--text); text-decoration: none;
-    font-size: 15px; line-height: 1.3;
-    transition: all 0.15s;
-  }
-  .dl-link:hover { border-color: var(--accent3); background: rgba(61,191,252,0.06); color: var(--accent3); }
+  .dl-link { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 8px; padding: 8px 10px; color: var(--text); text-decoration: none; font-size: 15px; line-height: 1.3; transition: all 0.15s; backdrop-filter: blur(4px); }
+  .dl-link:hover { border-color: rgba(192,132,224,0.4); background: rgba(192,132,224,0.05); color: var(--accent3); }
   .dl-link b { color: var(--text); display: block; }
   .dl-link:hover b { color: var(--accent3); }
   .dl-link small { color: var(--muted); font-size: 13px; }
@@ -275,10 +134,203 @@
 </style>
 </head>
 <body>
+<canvas id="wave-canvas"></canvas>
+<script>
+(function () {
+    const canvas = document.getElementById('wave-canvas');
+    const ctx    = canvas.getContext('2d');
+    const SIZE    = 18;
+    // 1 true dark + rose/mauve/wine palette, medium brightness, not oversaturated
+    const PALETTE = [
+        [  5,   4,   8],  // true black
+        [  8,   5,  12],  // near black
+        [ 12,   7,  18],  // very dark plum
+        [ 18,  10,  25],  // deep shadow
+        [ 28,  12,  35],  // dark purple-black
+        [ 45,  15,  45],  // dark plum
+        [ 70,  18,  52],  // deep wine
+        [ 18,  10,  25],  // deep shadow repeat — dark stays dominant
+        [  8,   5,  12],  // near black repeat
+        [105,  28,  65],  // wine accent
+        [150,  42,  82],  // rose accent — brightest, rare
+        [ 70,  18,  52],  // deep wine
+        [ 28,  12,  35],  // dark purple-black
+        [  5,   4,   8],  // true black
+    ];
+    let W, H, cols, rows, t = 0;
+
+    function resize() {
+        W = window.innerWidth; H = window.innerHeight;
+        cols = Math.ceil(W/SIZE)+1; rows = Math.ceil(H/SIZE)+1;
+        canvas.width = W; canvas.height = H;
+        canvas.style.width = W+'px'; canvas.style.height = H+'px';
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function draw() {
+        const n = PALETTE.length;
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                // per-cell phase offset so each pixel shifts independently
+                const phase = (Math.sin(c * 1.3 + r * 0.7) + Math.cos(c * 0.5 - r * 1.1)) * 2;
+                const raw   = (c * 0.18 + r * 0.14 + t * 0.04 + phase);
+                const pos   = ((raw % n) + n) % n;
+                const i1    = Math.floor(pos) % n;
+                const i2    = (i1 + 1) % n;
+                const f     = pos - Math.floor(pos);
+                const p1 = PALETTE[i1], p2 = PALETTE[i2];
+                const ri = Math.round(p1[0] + (p2[0]-p1[0]) * f);
+                const gi = Math.round(p1[1] + (p2[1]-p1[1]) * f);
+                const bi = Math.round(p1[2] + (p2[2]-p1[2]) * f);
+                ctx.fillStyle = `rgb(${ri},${gi},${bi})`;
+                ctx.fillRect(c*SIZE, r*SIZE, SIZE, SIZE);
+            }
+        }
+        t += 1;
+        requestAnimationFrame(draw);
+    }
+    draw();
+})();
+</script>
 
 <div class="header-area">
   <h1>⛏ FLAT WORLD GEN</h1>
   <div class="subtitle">Minecraft Bedrock Edition — FlatWorldLayers generator</div>
+  <div class="version-badge" onclick="toggleChangelog()">v1.4</div>
+</div>
+
+<div class="changelog-overlay" id="changelog-overlay" onclick="handleOverlayClick(event)">
+  <div class="changelog-box" id="changelog-box">
+    <div class="changelog-title">▸ CHANGELOG</div>
+
+    <div class="changelog-entry">
+      <div class="changelog-ver">v1.4 — CURRENT</div>
+      <ul class="changelog-items">
+        <li>Responsive proper — mobile & desktop layout terpisah</li>
+        <li>Mobile: padding compact, font adjusted, button thumb-friendly</li>
+        <li>Desktop: spacing & font lebih spacious</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-ver">v1.3</div>
+      <ul class="changelog-items">
+        <li>Redesign UI ke glassmorphism</li>
+        <li>Background pixel chromatic diagonal wave</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-ver">v1.2</div>
+      <ul class="changelog-items">
+        <li>Tambah TNT block icon canvas isometric 💣</li>
+        <li>How to use dipindah ke atas grid</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-ver">v1.1</div>
+      <ul class="changelog-items">
+        <li>Preset End diganti Full TNT 8 layer tanpa bedrock 💣</li>
+        <li>Hapus output JSON box + tombol Copy/Download JSON</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-ver">v1.0</div>
+      <ul class="changelog-items">
+        <li>BiomeOverride tag — grass & water color ngikut biome</li>
+        <li>Default game mode Creative</li>
+        <li>Watermark [XIAOCIA.MY.ID] terkunci di world name</li>
+        <li>Thumbnail branding XIAOCIA bundled</li>
+        <li>Deploy public di xiaocia.my.id</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-ver">v0.10 — v0.12</div>
+      <ul class="changelog-items">
+        <li>Fix header version level.dat → 3</li>
+        <li>Fix Generator tag type + dynamic Flat/Void value</li>
+        <li>Fix StorageVersion</li>
+        <li>Tambah BiomeOverride support</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-ver">v0.7 — v0.9</div>
+      <ul class="changelog-items">
+        <li>.mcworld generator dari scratch — NBT encoder + ZIP packer</li>
+        <li>LevelDB minimal bundled</li>
+        <li>Thumbnail world_icon.jpeg base64 embedded</li>
+        <li>Watermark [XIAOCIA.MY.ID] di world name</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-ver">v0.4 — v0.6</div>
+      <ul class="changelog-items">
+        <li>Canvas isometric 3D block icons (ganti texture URL yang kena CORS)</li>
+        <li>How to use guide + download links</li>
+        <li>Fix urutan layer list biar konsisten sama preview</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-ver">v0.1 — v0.3</div>
+      <ul class="changelog-items">
+        <li>Layer editor — tambah, hapus, drag reorder, atur ketebalan</li>
+        <li>8 preset world</li>
+        <li>Visual preview layer</li>
+        <li>50+ biome, 45+ block</li>
+        <li>Output JSON FlatWorldLayers</li>
+        <li>Percobaan texture URL mcasset.cloud — gagal CORS 😂</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<div style="max-width:960px;margin:0 auto 16px;">
+  <div class="panel">
+    <div class="panel-title">▸ HOW TO USE</div>
+    <div class="step-list">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Atur layer &amp; biome</div>
+          <div class="step-desc">Gunakan panel LAYERS dan BIOME. Bisa pakai preset atau custom sendiri.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Kasih nama worldnya</div>
+          <div class="step-desc">Isi nama di field World Name lalu klik <span class="tag">⬇ DOWNLOAD .mcworld</span>. File langsung generate di browser, gak perlu internet.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Import ke Minecraft</div>
+          <div class="step-desc">Buka file <code>.mcworld</code> dari file manager → Minecraft otomatis import → world siap dimainkan! 🎮</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Tidak bisa import?</div>
+          <div class="step-desc">Rename file jadi <code>.zip</code> → extract → taruh di folder <code>com.mojang/minecraftWorlds/</code> manual.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <div class="grid">
@@ -311,52 +363,9 @@
       <div class="btn-row" style="margin-bottom:10px;">
         <button class="btn btn-green" style="flex:1;padding:12px;" onclick="generateMcworld()">⬇ DOWNLOAD .mcworld</button>
       </div>
-      <div style="color:var(--muted);font-size:14px;margin-bottom:10px;">atau ambil JSON-nya aja:</div>
-      <div id="output-box"></div>
-      <div class="btn-row">
-        <button class="btn btn-blue" onclick="copyOutput()">COPY JSON</button>
-        <button class="btn btn-blue" onclick="downloadJSON()">DOWNLOAD .json</button>
-      </div>
+
     </div>
 
-    <div class="panel">
-      <div class="panel-title">▸ HOW TO USE</div>
-      <div class="step-list">
-
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-body">
-            <div class="step-title">Atur layer & biome</div>
-            <div class="step-desc">Gunakan panel LAYERS dan BIOME di sebelah kanan. Bisa pakai preset atau custom sendiri.</div>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-body">
-            <div class="step-title">Kasih nama worldnya</div>
-            <div class="step-desc">Isi nama di field <span class="tag">World Name</span> lalu klik <span class="tag">DOWNLOAD .mcworld</span>. File langsung generate di browser, gak perlu internet.</div>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-body">
-            <div class="step-title">Import ke Minecraft</div>
-            <div class="step-desc">Buka file <code>.mcworld</code> dari file manager → Minecraft otomatis import → world siap dimainkan! 🎮</div>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-num">4</div>
-          <div class="step-body">
-            <div class="step-title">Tidak bisa import?</div>
-            <div class="step-desc">Coba rename file jadi <code>.zip</code> → extract → taruh di folder <code>com.mojang/minecraftWorlds/</code> secara manual.</div>
-          </div>
-        </div>
-
-      </div>
-    </div>
 
   </div>
 
@@ -440,6 +449,7 @@ const BLOCKS = [
   {name:"minecraft:prismarine",   label:"Prismarine",      top:"#5aaa98",left:"#206858",right:"#3a8870"},
   {name:"minecraft:purpur_block", label:"Purpur Block",    top:"#a870a8",left:"#603868",right:"#885088"},
   {name:"minecraft:sponge",       label:"Sponge",          top:"#c8c840",left:"#787810",right:"#a8a828"},
+  {name:"minecraft:tnt",           label:"TNT",             top:"#e83020",left:"#901008",right:"#c02018"},
 ];
 
 const BIOMES = [
@@ -481,8 +491,8 @@ const PRESETS = [
     layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:netherrack",count:3},{block:"minecraft:soul_sand",count:1}], biome:171 },
   { label:"Ocean Floor",  topBlock:"minecraft:water",
     layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:gravel",count:3},{block:"minecraft:water",count:5}], biome:44 },
-  { label:"End",          topBlock:"minecraft:end_stone",
-    layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:end_stone",count:3}], biome:9 },
+  { label:"Full TNT",      topBlock:"minecraft:tnt",
+    layers:[{block:"minecraft:tnt",count:8}], biome:1 },
 ];
 
 // ── ISO CUBE RENDERER ────────────────────────────────────────────────────────
@@ -620,7 +630,6 @@ function init() {
 function renderAll() {
   renderLayerList();
   renderPreview();
-  updateOutput();
   document.getElementById('void-badge').style.display = layers.length===0 ? 'inline' : 'none';
 }
 
@@ -732,16 +741,7 @@ function renderPreview() {
   });
 }
 
-function updateOutput() {
-  const obj={
-    biome_id:selectedBiome,
-    block_layers:layers.map(l=>({block_name:l.block,count:l.count})),
-    encoding_version:6,
-    structure_options:null,
-    world_version:"version.post_1_18"
-  };
-  document.getElementById('output-box').textContent=JSON.stringify(obj);
-}
+
 
 // ── ACTIONS ───────────────────────────────────────────────────────────────────
 function addLayer(){
@@ -772,26 +772,19 @@ function applyPreset(p){
   renderAll();
 }
 
-function copyOutput(){
-  const t=document.getElementById('output-box').textContent;
-  navigator.clipboard.writeText(t).then(()=>{
-    const box=document.getElementById('output-box');
-    const orig=box.textContent;
-    box.classList.add('copied');
-    box.textContent='✓ Copied!';
-    setTimeout(()=>{ box.textContent=orig; box.classList.remove('copied'); },1400);
-  });
-}
 
-function downloadJSON(){
-  const t=document.getElementById('output-box').textContent;
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));
-  a.download='FlatWorldLayers.json';
-  a.click();
-}
 
 init();
+
+function toggleChangelog() {
+  document.getElementById('changelog-overlay').classList.toggle('open');
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('changelog-overlay')) {
+    toggleChangelog();
+  }
+}
 
 // ── MCWORLD GENERATOR ────────────────────────────────────────────────────────
 
