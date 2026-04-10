@@ -1,11 +1,735 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QRIS · XIAOCIA</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root {
+    --orange: #ff6a1a;
+    --pink:   #ff1a6a;
+    --cyan:   #00d4ff;
+    --blue:   #1a6aff;
+    --dark:   #111010;
+    --dark2:  #1a1919;
+    --text:   #f5f0ee;
+    --dim:    rgba(245,240,238,0.4);
+  }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.2rem;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Diagonal slash lines background */
+  .bg-slashes {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .bg-slashes::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: repeating-linear-gradient(
+      -55deg,
+      transparent,
+      transparent 38px,
+      rgba(255,255,255,0.025) 38px,
+      rgba(255,255,255,0.025) 40px
+    );
+  }
+
+  /* Corner accent lines like the poster */
+  .slash-accent {
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .slash-tl {
+    top: 0; left: 0;
+    width: 300px; height: 300px;
+    background: linear-gradient(135deg, rgba(255,106,26,0.25) 0%, transparent 60%);
+  }
+  .slash-br {
+    bottom: 0; right: 0;
+    width: 300px; height: 300px;
+    background: linear-gradient(315deg, rgba(180,0,80,0.2) 0%, transparent 60%);
+  }
+
+  /* Neon line accents */
+  .neon-line {
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .neon-line-1 {
+    top: 15%; left: -40px;
+    width: 280px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--orange), transparent);
+    transform: rotate(-10deg);
+    box-shadow: 0 0 12px var(--orange);
+    opacity: 0.7;
+  }
+  .neon-line-2 {
+    bottom: 18%; right: -40px;
+    width: 280px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--pink), transparent);
+    transform: rotate(-10deg);
+    box-shadow: 0 0 12px var(--pink);
+    opacity: 0.7;
+  }
+
+  /* Main wrapper */
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 380px;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 1.6rem;
+    animation: fadeDown 0.5s ease both;
+  }
+
+  .logo-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+  }
+
+  .logo-qris {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 0.2rem 0.6rem;
+    font-family: 'Space Grotesk', monospace;
+    position: relative;
+  }
+  /* Corner brackets like poster */
+  .logo-qris::before, .logo-qris::after {
+    content: '';
+    position: absolute;
+    width: 5px; height: 5px;
+    border-color: var(--orange);
+    border-style: solid;
+  }
+  .logo-qris::before { top:-1px; left:-1px; border-width: 1px 0 0 1px; }
+  .logo-qris::after  { bottom:-1px; right:-1px; border-width: 0 1px 1px 0; }
+
+  .status-dot {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.6rem;
+    color: var(--dim);
+    letter-spacing: 0.05em;
+  }
+  .status-dot::before {
+    content: '';
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #00ff88;
+    box-shadow: 0 0 8px #00ff88;
+    animation: blink 2s ease infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* Big title — XIAØCIA style */
+  .site-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4rem;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    position: relative;
+    display: inline-block;
+  }
+
+  .site-title .t-white { color: #fff; }
+  .site-title .t-stroke {
+    -webkit-text-stroke: 1.5px var(--pink);
+    color: transparent;
+  }
+
+  /* Glitch effect on title */
+  .site-title::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 3px; top: 2px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4rem;
+    letter-spacing: 0.08em;
+    color: var(--cyan);
+    opacity: 0.35;
+    clip-path: inset(30% 0 50% 0);
+    animation: glitch 4s steps(1) infinite;
+  }
+
+  @keyframes glitch {
+    0%,90%,100% { clip-path: inset(30% 0 50% 0); left: 3px; opacity: 0.35; }
+    92%          { clip-path: inset(60% 0 20% 0); left: -3px; opacity: 0.5; }
+    95%          { clip-path: inset(10% 0 70% 0); left: 4px; opacity: 0.3; }
+  }
+
+  .header-sub {
+    font-size: 0.62rem;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    margin-top: 0.3rem;
+  }
+
+  /* Input card */
+  .card {
+    background: var(--dark2);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 1.5rem;
+    animation: fadeUp 0.5s 0.1s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Orange top accent */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--orange), var(--pink));
+  }
+
+  .input-label {
+    font-size: 0.6rem;
+    color: var(--dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    display: block;
+    font-weight: 500;
+  }
+
+  .amount-row {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .amount-row:focus-within {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 2px rgba(255,106,26,0.15);
+  }
+
+  .currency-badge {
+    padding: 0.8rem 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--orange);
+    border-right: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,106,26,0.08);
+    flex-shrink: 0;
+  }
+
+  .amount-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 500;
+    padding: 0.8rem 1rem;
+    min-width: 0;
+  }
+  .amount-input::placeholder { color: var(--dim); font-size: 0.85rem; font-weight: 400; }
+  .amount-input::-webkit-outer-spin-button,
+  .amount-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .amount-input[type=number] { -moz-appearance: textfield; }
+
+  .preset-label {
+    font-size: 0.58rem;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 1rem 0 0.45rem;
+    display: block;
+  }
+
+  .presets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+  }
+
+  .preset-btn {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--dim);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 0.45rem 0.2rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  /* Tier colors — poster palette */
+  .preset-btn[data-val="5000"],
+  .preset-btn[data-val="10000"],
+  .preset-btn[data-val="25000"] {
+    --tc: rgba(0,212,255,0.12); --tb: rgba(0,212,255,0.5); --tt: #6ae8ff;
+  }
+  .preset-btn[data-val="50000"],
+  .preset-btn[data-val="75000"],
+  .preset-btn[data-val="100000"] {
+    --tc: rgba(255,106,26,0.12); --tb: rgba(255,106,26,0.5); --tt: #ffb088;
+  }
+  .preset-btn[data-val="250000"],
+  .preset-btn[data-val="500000"] {
+    --tc: rgba(255,26,106,0.12); --tb: rgba(255,26,106,0.5); --tt: #ff88b0;
+  }
+
+  .preset-btn:hover  { background:var(--tc); border-color:var(--tb); color:var(--tt); }
+  .preset-btn.active { background:var(--tc); border-color:var(--tb); color:var(--tt); box-shadow:0 0 12px var(--tc); }
+
+  .error-msg { font-size:0.62rem; color:#ff4466; margin-top:0.5rem; display:none; }
+  .error-msg.visible { display:block; }
+
+  .gen-btn {
+    width: 100%;
+    background: linear-gradient(90deg, var(--orange), var(--pink));
+    border: none;
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+    padding: 0.85rem;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-top: 1.3rem;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(255,106,26,0.3);
+  }
+  .gen-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 28px rgba(255,26,106,0.45);
+  }
+  .gen-btn:active { transform: translateY(0); }
+
+  /* QR section */
+  .qr-section { display:none; margin-top:1rem; }
+  .qr-section.visible { display:block; animation: fadeUp 0.4s ease both; }
+
+  .qr-card {
+    background: var(--dark2);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 1.4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Pink bottom accent */
+  .qr-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--pink), var(--blue));
+  }
+
+  .qr-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.1rem;
+  }
+
+  .label-xs {
+    font-size: 0.55rem;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.15rem;
+  }
+
+  .amount-big {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 0.05em;
+    background: linear-gradient(90deg, var(--orange), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+  .curr-xs {
+    font-size: 1rem;
+    -webkit-text-fill-color: rgba(245,240,238,0.4);
+    margin-right: 0.05rem;
+  }
+
+  .merchant-tag {
+    text-align: right;
+  }
+  .merchant-tag .m-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.12em;
+    -webkit-text-stroke: 1px var(--orange);
+    color: transparent;
+    line-height: 1;
+  }
+
+  /* QR frame */
+  .qr-frame {
+    background: #0a0909;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 4px;
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+
+  /* Corner brackets */
+  .qr-frame::before, .qr-frame::after,
+  .qr-corner-tr, .qr-corner-bl {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    border-color: var(--orange);
+    border-style: solid;
+  }
+  .qr-frame::before { top:-1px; left:-1px; border-width:2px 0 0 2px; }
+  .qr-frame::after  { bottom:-1px; right:-1px; border-width:0 2px 2px 0; }
+  .qr-corner-tr { top:-1px; right:-1px; border-width:2px 2px 0 0; border-color:var(--pink); }
+  .qr-corner-bl { bottom:-1px; left:-1px; border-width:0 0 2px 2px; border-color:var(--pink); }
+
+  .qr-frame.glowing {
+    animation: qrGlow 2.5s ease-in-out infinite;
+  }
+  @keyframes qrGlow {
+    0%,100% { box-shadow: 0 0 12px rgba(255,106,26,0.2), 0 0 24px rgba(255,26,106,0.1); }
+    50%      { box-shadow: 0 0 24px rgba(255,106,26,0.45), 0 0 48px rgba(255,26,106,0.25); }
+  }
+
+  #qr-colored-canvas { display:block; border-radius:2px; }
+
+  .qr-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.7rem;
+    font-size: 0.55rem;
+    color: var(--dim);
+    letter-spacing: 0.05em;
+  }
+
+  .dl-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--dim);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.65rem;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-top: 0.7rem;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .dl-btn:hover {
+    border-color: var(--orange);
+    color: var(--orange);
+    box-shadow: 0 0 12px rgba(255,106,26,0.15);
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 1.4rem;
+    font-size: 0.58rem;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    animation: fadeUp 0.5s 0.2s ease both;
+  }
+  .footer a { color: rgba(255,106,26,0.7); text-decoration:none; }
+
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(12px)}  to{opacity:1;transform:translateY(0)} }
+
+  ::-webkit-scrollbar { width:3px; }
+  ::-webkit-scrollbar-track { background:var(--dark); }
+  ::-webkit-scrollbar-thumb { background:rgba(255,106,26,0.3); border-radius:3px; }
+</style>
 </head>
 <body>
-    <img src="https://xiaocia.xyz/payment/Tak%20berjudul17.jpg" alt="QRIS" style="max-width: 100%; height: 100%;">
+
+<div class="bg-slashes"></div>
+<div class="slash-accent slash-tl"></div>
+<div class="slash-accent slash-br"></div>
+<div class="neon-line neon-line-1"></div>
+<div class="neon-line neon-line-2"></div>
+
+<div class="wrapper">
+  <div class="header">
+    <div class="logo-row">
+      <div class="logo-qris">QRIS</div>
+      <div class="status-dot">ALL PAYMENT</div>
+    </div>
+    <div class="site-title" data-text="XIAØCIA">
+      <span class="t-white">XIA</span><span class="t-stroke">Ø</span><span class="t-white">CIA</span>
+    </div>
+    <div class="header-sub">xiaocia.my.id · qris generator</div>
+  </div>
+
+  <div class="card">
+    <label class="input-label" for="amount-input">Nominal Pembayaran</label>
+    <div class="amount-row">
+      <div class="currency-badge">Rp</div>
+      <input type="number" id="amount-input" class="amount-input" placeholder="ketik nominal bebas..." min="1" max="500000"/>
+    </div>
+    <div class="error-msg" id="error-msg"></div>
+
+    <span class="preset-label">Nominal cepat</span>
+    <div class="presets">
+      <button class="preset-btn" data-val="5000">5rb</button>
+      <button class="preset-btn" data-val="10000">10rb</button>
+      <button class="preset-btn" data-val="25000">25rb</button>
+      <button class="preset-btn" data-val="50000">50rb</button>
+      <button class="preset-btn" data-val="75000">75rb</button>
+      <button class="preset-btn" data-val="100000">100rb</button>
+      <button class="preset-btn" data-val="250000">250rb</button>
+      <button class="preset-btn" data-val="500000">500rb</button>
+    </div>
+
+    <button class="gen-btn" onclick="generateQRIS()">GENERATE QRIS</button>
+  </div>
+
+  <div class="qr-section" id="qr-section">
+    <div class="qr-card">
+      <div class="qr-meta">
+        <div>
+          <div class="label-xs">Total Tagihan</div>
+          <div class="amount-big">
+            <span class="curr-xs">Rp</span><span id="display-num">0</span>
+          </div>
+        </div>
+        <div class="merchant-tag">
+          <div class="label-xs">Merchant</div>
+          <div class="m-name">XIAOCIA</div>
+        </div>
+      </div>
+
+      <div class="qr-frame" id="qr-frame">
+        <div class="qr-corner-tr"></div>
+        <div class="qr-corner-bl"></div>
+        <canvas id="qr-colored-canvas"></canvas>
+      </div>
+
+      <div class="qr-info">
+        <span id="ts-generated">—</span>
+        <span>scan dengan app apapun</span>
+      </div>
+
+      <button class="dl-btn" onclick="downloadQR()">↓ Simpan QR Code</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="https://xiaocia.my.id">xiaocia.my.id</a> · Dicetak oleh: 93600915
+  </div>
+</div>
+
+<div id="qr-hidden" style="position:absolute;left:-9999px;top:-9999px;visibility:hidden;"></div>
+
+<script>
+const QRIS_TEMPLATE =
+  '00020101021226570011ID.DANA.WWW011893600915080570197702098057019770303UMI' +
+  '51440014ID.CO.QRIS.WWW0215ID10243648781560303UMI' +
+  '520450395303360' +
+  '5802ID' +
+  '5907XIAOCIA' +
+  '6012Kab. Cirebon' +
+  '610545164' +
+  '621960150011ID.DANA.WWW'
+
+// Gradient: orange → pink → blue (poster palette)
+const QR_GRAD = [
+  { pos:0,   r:255, g:120, b:30  },
+  { pos:0.5, r:255, g:26,  b:106 },
+  { pos:1,   r:26,  g:106, b:255 },
+]
+const BG_RGB = [10, 9, 9]
+
+function getGradColor(y, h) {
+  const t = y / h
+  let i = 0
+  while (i < QR_GRAD.length - 2 && t > QR_GRAD[i+1].pos) i++
+  const a = QR_GRAD[i], b = QR_GRAD[i+1]
+  const f = (t - a.pos) / (b.pos - a.pos)
+  return [
+    Math.round(a.r + (b.r - a.r) * f),
+    Math.round(a.g + (b.g - a.g) * f),
+    Math.round(a.b + (b.b - a.b) * f),
+  ]
+}
+
+function crc16ccitt(str) {
+  let crc = 0xFFFF
+  for (let i = 0; i < str.length; i++) {
+    crc ^= str.charCodeAt(i) << 8
+    for (let j = 0; j < 8; j++) {
+      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1)
+      crc &= 0xFFFF
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, '0')
+}
+
+function buildQris(amount) {
+  const val = String(amount)
+  const tag54 = '54' + val.length.toString().padStart(2, '0') + val
+  const payload = QRIS_TEMPLATE.replace('5303360', '5303360' + tag54)
+  const crc = crc16ccitt(payload + '6304')
+  return payload + '6304' + crc
+}
+
+function formatRupiah(n) {
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
+function countUp(target, dur=550) {
+  const el = document.getElementById('display-num')
+  const start = Date.now()
+  const tick = () => {
+    const p = Math.min((Date.now()-start)/dur, 1)
+    const e = 1 - Math.pow(1-p, 3)
+    el.textContent = formatRupiah(Math.round(target*e))
+    if (p < 1) requestAnimationFrame(tick)
+  }
+  tick()
+}
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    document.getElementById('amount-input').value = btn.dataset.val
+    document.getElementById('error-msg').classList.remove('visible')
+  })
+})
+
+document.getElementById('amount-input').addEventListener('input', () => {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'))
+})
+
+function generateQRIS() {
+  const input = document.getElementById('amount-input')
+  const amount = parseInt(input.value)
+  const errorEl = document.getElementById('error-msg')
+
+  if (!amount || isNaN(amount) || amount < 1) {
+    errorEl.textContent = '⚠ Nominal tidak valid'
+    errorEl.classList.add('visible')
+    return
+  }
+  if (amount > 500000) {
+    errorEl.textContent = '⚠ Maksimal Rp500.000'
+    errorEl.classList.add('visible')
+    return
+  }
+
+  errorEl.classList.remove('visible')
+  const qrisStr = buildQris(amount)
+
+  const hidden = document.getElementById('qr-hidden')
+  hidden.innerHTML = ''
+  new QRCode(hidden, { text:qrisStr, width:260, height:260, correctLevel:QRCode.CorrectLevel.M })
+
+  setTimeout(() => {
+    const src = hidden.querySelector('canvas') || hidden.querySelector('img')
+    const finalCanvas = document.getElementById('qr-colored-canvas')
+    const S = 260
+    finalCanvas.width = S
+    finalCanvas.height = S
+    const ctx = finalCanvas.getContext('2d')
+
+    const img = new Image()
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, S, S)
+      const imgData = ctx.getImageData(0, 0, S, S)
+      const d = imgData.data
+      for (let y = 0; y < S; y++) {
+        const [r,g,b] = getGradColor(y, S)
+        for (let x = 0; x < S; x++) {
+          const i = (y*S+x)*4
+          const isBlack = d[i] < 128
+          d[i]   = isBlack ? r       : BG_RGB[0]
+          d[i+1] = isBlack ? g       : BG_RGB[1]
+          d[i+2] = isBlack ? b       : BG_RGB[2]
+          d[i+3] = 255
+        }
+      }
+      ctx.putImageData(imgData, 0, 0)
+    }
+    img.src = src.tagName==='CANVAS' ? src.toDataURL() : src.src
+
+    countUp(amount)
+
+    const now = new Date()
+    document.getElementById('ts-generated').textContent =
+      now.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})
+
+    const section = document.getElementById('qr-section')
+    section.classList.remove('visible')
+    void section.offsetWidth
+    section.classList.add('visible')
+    document.getElementById('qr-frame').classList.add('glowing')
+  }, 100)
+}
+
+function downloadQR() {
+  const canvas = document.getElementById('qr-colored-canvas')
+  if (!canvas.width) return
+  const amount = document.getElementById('amount-input').value
+  const a = document.createElement('a')
+  a.download = `qris-xiaocia-${amount}.png`
+  a.href = canvas.toDataURL('image/png')
+  a.click()
+}
+
+document.getElementById('amount-input').addEventListener('keydown', e => {
+  if (e.key==='Enter') generateQRIS()
+})
+</script>
 </body>
 </html>
