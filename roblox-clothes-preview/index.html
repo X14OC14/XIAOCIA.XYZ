@@ -481,7 +481,7 @@ function parseOBJ(text) {
     const p3 = posIdx[i]*3;
     pos[i*3]=positions[p3]; pos[i*3+1]=positions[p3+1]; pos[i*3+2]=positions[p3+2];
     const u2 = uvIdx[i]*2;
-    uv[i*2]=uvs[u2]; uv[i*2+1]=uvs[u2+1];
+    uv[i*2]=uvs[u2]; uv[i*2+1]=1.0 - uvs[u2+1];
     const n3 = normIdx[i]*3;
     nrm[i*3]=normals[n3]; nrm[i*3+1]=normals[n3+1]; nrm[i*3+2]=normals[n3+2];
   }
