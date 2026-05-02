@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skin Preview</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f7f6f3;
+  --surface: #ffffff;
+  --border: #e4e2dd;
+  --text: #1a1916;
+  --muted: #9b9890;
+  --accent: #1a1916;
+  --hover: #f0ede8;
+  --radius: 10px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  overflow: hidden;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.wordmark {
+  font-family: 'Instrument Serif', serif;
+  font-size: 17px;
+  font-style: italic;
+  letter-spacing: -0.3px;
+  color: var(--text);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  overflow: hidden;
+}
+
+/* VIEWER */
+.viewer {
+  position: relative;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.viewer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.45;
+}
+
+#canvas3d {
+  cursor: grab;
+  position: relative;
+  z-index: 1;
+}
+#canvas3d:active { cursor: grabbing; }
+
+.viewer-hint {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--muted);
+  z-index: 2;
+  white-space: nowrap;
+  animation: fadeOut 4s ease 2s forwards;
+}
+@keyframes fadeOut { to { opacity: 0; pointer-events: none; } }
+
+.viewer-actions {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 2;
+}
+
+.icon-btn {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  transition: background 0.15s;
+}
+.icon-btn:hover { background: var(--hover); }
+.icon-btn.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+#loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 10;
+  background: var(--bg);
+  transition: opacity 0.3s;
+}
+#loader.hidden { opacity: 0; pointer-events: none; }
+.loader-ring {
+  width: 28px; height: 28px;
+  border: 2px solid var(--border);
+  border-top-color: var(--text);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader-text { color: var(--muted); font-size: 11px; }
+
+/* SIDEBAR */
+.sidebar {
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.sidebar::-webkit-scrollbar { width: 3px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+
+.section {
+  padding: 18px 18px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-title {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.pill-group { display: flex; gap: 5px; flex-wrap: wrap; }
+
+.pill {
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pill:hover { border-color: var(--text); color: var(--text); }
+.pill.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+.tab-row {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 7px;
+  border: none;
+  background: transparent;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tab-btn.active { background: var(--text); color: var(--bg); }
+
+.drop-zone {
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 22px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg);
+}
+.drop-zone:hover, .drop-zone.over {
+  border-color: var(--text);
+  background: var(--hover);
+}
+.drop-zone input { display: none; }
+.drop-icon { font-size: 20px; display: block; margin-bottom: 8px; }
+.drop-label { color: var(--text); font-size: 12px; margin-bottom: 3px; }
+.drop-sub { color: var(--muted); font-size: 10px; }
+
+.tex-thumb {
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  margin-top: 10px;
+  display: none;
+  image-rendering: pixelated;
+}
+
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.swatch {
+  aspect-ratio: 1;
+  border-radius: 5px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.swatch:hover { transform: scale(1.1); }
+.swatch.active { border-color: var(--text); }
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.color-pick-wrap {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.color-pick-wrap input {
+  position: absolute;
+  inset: -6px;
+  opacity: 0;
+  cursor: pointer;
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+}
+.color-label-txt { color: var(--muted); font-size: 11px; flex: 1; }
+.hex-input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px 7px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--text);
+  width: 80px;
+  outline: none;
+}
+.hex-input:focus { border-color: var(--text); }
+
+.light-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.light-lbl { color: var(--muted); font-size: 11px; width: 52px; flex-shrink: 0; }
+input[type=range] {
+  flex: 1;
+  appearance: none;
+  height: 2px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--text);
+  cursor: pointer;
+}
+.light-val { color: var(--muted); font-size: 10px; width: 26px; text-align: right; }
+
+.export-btn {
+  width: 100%;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  padding: 11px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  letter-spacing: 0.03em;
+}
+.export-btn:hover { opacity: 0.75; }
+
+.hint-box {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: 7px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 640px) {
+  .workspace { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+  .sidebar { max-height: 48dvh; border-left: none; border-top: 1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="wordmark">Skin Preview</span>
+  <div class="header-right">
+    <span><span class="status-dot"></span>Live</span>
+    <span style="color:var(--border)">|</span>
+    <span>Drag · Scroll · Drop</span>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <div class="viewer">
+    <div id="loader">
+      <div class="loader-ring"></div>
+      <span class="loader-text">Loading model…</span>
+    </div>
+    <canvas id="canvas3d"></canvas>
+    <div class="viewer-hint">drag to rotate · scroll to zoom</div>
+    <div class="viewer-actions">
+      <button class="icon-btn" id="rotBtn" title="Auto-rotate" onclick="toggleRot()">⟳</button>
+      <button class="icon-btn" title="Reset" onclick="resetCam()">⊙</button>
+    </div>
+  </div>
+
+  <div class="sidebar">
+
+    <div class="section">
+      <div class="section-title">Body type</div>
+      <div class="pill-group">
+        <button class="pill active" onclick="loadModel('blocky')"  id="pill-blocky">Blocky</button>
+        <button class="pill"        onclick="loadModel('rounded')" id="pill-rounded">Rounded</button>
+        <button class="pill"        onclick="loadModel('woman')"   id="pill-woman">Woman</button>
+        <button class="pill"        onclick="loadModel('man')"     id="pill-man">Man</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Clothing texture</div>
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="switchTab('shirt',this)">Shirt</button>
+        <button class="tab-btn"        onclick="switchTab('pants',this)">Pants</button>
+      </div>
+      <div class="drop-zone" id="dropZone"
+        onclick="document.getElementById('fileIn').click()"
+        ondragover="dzOver(event)" ondragleave="dzOut()" ondrop="dzDrop(event)">
+        <input type="file" id="fileIn" accept="image/*" onchange="fileLoad(event)">
+        <span class="drop-icon">↑</span>
+        <div class="drop-label">Drop or click to upload</div>
+        <div class="drop-sub">PNG 585×559 · paste anywhere</div>
+      </div>
+      <img class="tex-thumb" id="texThumb">
+    </div>
+
+    <div class="section">
+      <div class="section-title">Skin tone</div>
+      <div class="swatch-grid" id="swatchGrid"></div>
+      <div class="color-row">
+        <div class="color-pick-wrap" id="skinPickWrap" style="background:#FFCBA4">
+          <input type="color" id="skinPicker" value="#FFCBA4" oninput="setSkin(this.value)">
+        </div>
+        <span class="color-label-txt">Custom</span>
+        <input class="hex-input" id="skinHex" value="#FFCBA4" oninput="skinHexIn(this.value)">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Lighting</div>
+      <div class="light-row">
+        <span class="light-lbl">Ambient</span>
+        <input type="range" min="0" max="100" value="55" oninput="setAmb(this.value)">
+        <span class="light-val" id="lAmb">55</span>
+      </div>
+      <div class="light-row">
+        <span class="light-lbl">Key</span>
+        <input type="range" min="0" max="100" value="75" oninput="setKey(this.value)">
+        <span class="light-val" id="lKey">75</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Export</div>
+      <button class="export-btn" onclick="exportTex()">Export template PNG</button>
+      <div class="hint-box">Exports 585×559 PNG ready to upload to Roblox Studio as shirt or pants template.</div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── OBJ PARSER ─────────────────────────────────────────────────────────────
+function parseOBJ(text) {
+  const positions = [], uvs = [], normals = [];
+  const posIdx = [], uvIdx = [], normIdx = [];
+
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (!line || line[0] === '#') continue;
+    const p = line.split(/\s+/);
+    if (p[0] === 'v')  { positions.push(+p[1], +p[2], +p[3]); continue; }
+    if (p[0] === 'vt') { uvs.push(+p[1], +p[2]); continue; }
+    if (p[0] === 'vn') { normals.push(+p[1], +p[2], +p[3]); continue; }
+    if (p[0] === 'f') {
+      const verts = p.slice(1).map(s => s.split('/').map(Number));
+      for (let i = 1; i < verts.length - 1; i++) {
+        for (const v of [verts[0], verts[i], verts[i+1]]) {
+          posIdx.push(v[0]-1);
+          uvIdx.push((v[1]||1)-1);
+          normIdx.push((v[2]||1)-1);
+        }
+      }
+    }
+  }
+
+  const count = posIdx.length;
+  const pos = new Float32Array(count * 3);
+  const uv  = new Float32Array(count * 2);
+  const nrm = new Float32Array(count * 3);
+
+  for (let i = 0; i < count; i++) {
+    const p3 = posIdx[i]*3;
+    pos[i*3]=positions[p3]; pos[i*3+1]=positions[p3+1]; pos[i*3+2]=positions[p3+2];
+    const u2 = uvIdx[i]*2;
+    uv[i*2]=uvs[u2]; uv[i*2+1]=uvs[u2+1];
+    const n3 = normIdx[i]*3;
+    nrm[i*3]=normals[n3]; nrm[i*3+1]=normals[n3+1]; nrm[i*3+2]=normals[n3+2];
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('uv',       new THREE.BufferAttribute(uv,  2));
+  geo.setAttribute('normal',   new THREE.BufferAttribute(nrm, 3));
+  return geo;
+}
+
+// ── SKIN SWATCHES ──────────────────────────────────────────────────────────
+const skinTones = [
+  '#FDDBB4','#FFCBA4','#F1A97A','#D8845A','#C2693C',
+  '#A0522D','#7A3B1E','#FFEFD5','#FFE4C4','#DEB887',
+  '#CD853F','#8B4513','#6B3A2A','#4A2010'
+];
+let currentSkin = '#FFCBA4';
+let activeTab = 'shirt';
+let shirtTex = null, pantsTex = null;
+let autoRot = false;
+let currentBody = 'blocky';
+
+(function buildSwatches() {
+  const grid = document.getElementById('swatchGrid');
+  skinTones.forEach(c => {
+    const s = document.createElement('div');
+    s.className = 'swatch' + (c === currentSkin ? ' active' : '');
+    s.style.background = c;
+    s.onclick = () => setSkin(c);
+    grid.appendChild(s);
+  });
+})();
+
+function setSkin(val) {
+  currentSkin = val;
+  document.getElementById('skinPicker').value = val;
+  document.getElementById('skinHex').value = val.toUpperCase();
+  document.getElementById('skinPickWrap').style.background = val;
+  document.querySelectorAll('.swatch').forEach((s, i) =>
+    s.classList.toggle('active', skinTones[i] === val));
+  if (avatarMat && !avatarMat.map) {
+    avatarMat.color.set(val);
+    avatarMat.needsUpdate = true;
+  }
+}
+
+function skinHexIn(v) {
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) setSkin(v);
+}
+
+// ── THREE SETUP ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('canvas3d');
+const vp = canvas.parentElement;
+let W = vp.clientWidth, H = vp.clientHeight;
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(40, W/H, 0.01, 100);
+camera.position.set(0, 1.2, 4.5);
+camera.lookAt(0, 1.2, 0);
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+
+let ambLight = new THREE.AmbientLight(0xffffff, 0.55);
+scene.add(ambLight);
+let keyLight = new THREE.DirectionalLight(0xfff8f0, 0.75);
+keyLight.position.set(2, 6, 4);
+keyLight.castShadow = true;
+scene.add(keyLight);
+const fillLight = new THREE.DirectionalLight(0xf0f4ff, 0.25);
+fillLight.position.set(-3, 2, -1);
+scene.add(fillLight);
+
+// shadow floor
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(8, 8),
+  new THREE.ShadowMaterial({ opacity: 0.07 })
+);
+floor.rotation.x = -Math.PI/2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// ── AVATAR ─────────────────────────────────────────────────────────────────
+let avatarMesh = null;
+let avatarMat  = null;
+
+function loadModel(type) {
+  currentBody = type;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  document.getElementById('pill-'+type).classList.add('active');
+
+  const loader = document.getElementById('loader');
+  loader.classList.remove('hidden');
+  loader.querySelector('.loader-text').textContent = 'Loading…';
+
+  fetch(type + '-r15.obj')
+    .then(r => { if (!r.ok) throw new Error(type+'-r15.obj not found'); return r.text(); })
+    .then(text => {
+      loader.querySelector('.loader-text').textContent = 'Parsing…';
+      const geo = parseOBJ(text);
+      geo.computeBoundingBox();
+      const box = geo.boundingBox;
+      const cx = (box.min.x+box.max.x)/2;
+      const cz = (box.min.z+box.max.z)/2;
+      geo.translate(-cx, -box.min.y, -cz);
+
+      const height = box.max.y - box.min.y;
+      const scale = 2.4 / height;
+
+      if (avatarMesh) scene.remove(avatarMesh);
+
+      const tex = activeTab === 'shirt' ? shirtTex : pantsTex;
+      avatarMat = new THREE.MeshStandardMaterial({
+        color: tex ? 0xffffff : new THREE.Color(currentSkin),
+        map: tex || null,
+        roughness: 0.82,
+        metalness: 0.0,
+      });
+
+      avatarMesh = new THREE.Mesh(geo, avatarMat);
+      avatarMesh.scale.setScalar(scale);
+      avatarMesh.castShadow = true;
+      scene.add(avatarMesh);
+
+      camera.position.set(0, 1.2, 4.5);
+      camera.lookAt(0, 1.2, 0);
+
+      loader.classList.add('hidden');
+    })
+    .catch(err => {
+      loader.querySelector('.loader-text').textContent = '⚠ ' + err.message;
+    });
+}
+
+function applyTex() {
+  if (!avatarMat) return;
+  const tex = activeTab === 'shirt' ? shirtTex : pantsTex;
+  avatarMat.map   = tex || null;
+  avatarMat.color = new THREE.Color(tex ? 0xffffff : currentSkin);
+  avatarMat.needsUpdate = true;
+}
+
+// ── INTERACTION ─────────────────────────────────────────────────────────────
+let drag = false, prev = {x:0,y:0};
+
+canvas.addEventListener('mousedown', e => { drag=true; prev={x:e.clientX,y:e.clientY}; });
+window.addEventListener('mouseup',   () => drag=false);
+window.addEventListener('mousemove', e => {
+  if (!drag || !avatarMesh) return;
+  avatarMesh.rotation.y += (e.clientX - prev.x) * 0.012;
+  avatarMesh.rotation.x = Math.max(-0.5, Math.min(0.5,
+    avatarMesh.rotation.x + (e.clientY - prev.y) * 0.006));
+  prev = {x:e.clientX, y:e.clientY};
+});
+canvas.addEventListener('wheel', e => {
+  camera.position.z = Math.max(1.5, Math.min(10, camera.position.z + e.deltaY*0.007));
+}, {passive:true});
+canvas.addEventListener('touchstart', e => { drag=true; prev={x:e.touches[0].clientX,y:e.touches[0].clientY}; });
+window.addEventListener('touchend',   () => drag=false);
+window.addEventListener('touchmove',  e => {
+  if (!drag || !avatarMesh) return;
+  avatarMesh.rotation.y += (e.touches[0].clientX-prev.x)*0.012;
+  avatarMesh.rotation.x = Math.max(-0.5,Math.min(0.5,
+    avatarMesh.rotation.x+(e.touches[0].clientY-prev.y)*0.006));
+  prev={x:e.touches[0].clientX,y:e.touches[0].clientY};
+});
+
+function toggleRot() {
+  autoRot = !autoRot;
+  document.getElementById('rotBtn').classList.toggle('on', autoRot);
+}
+function resetCam() {
+  camera.position.set(0, 1.2, 4.5);
+  camera.lookAt(0, 1.2, 0);
+  if (avatarMesh) avatarMesh.rotation.set(0, 0, 0);
+}
+function setAmb(v) { ambLight.intensity=v/100*1.1; document.getElementById('lAmb').textContent=v; }
+function setKey(v) { keyLight.intensity=v/100*1.5; document.getElementById('lKey').textContent=v; }
+
+function switchTab(tab, btn) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const tex = tab==='shirt' ? shirtTex : pantsTex;
+  const thumb = document.getElementById('texThumb');
+  if (tex?.image) { thumb.src=tex.image.src; thumb.style.display='block'; }
+  else thumb.style.display='none';
+  applyTex();
+}
+
+// ── FILE / DROP ─────────────────────────────────────────────────────────────
+function dzOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('over'); }
+function dzOut()   { document.getElementById('dropZone').classList.remove('over'); }
+function dzDrop(e) { e.preventDefault(); dzOut(); if(e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]); }
+function fileLoad(e) { if(e.target.files[0]) processFile(e.target.files[0]); }
+
+window.addEventListener('paste', e => {
+  const item = [...e.clipboardData.items].find(i=>i.type.startsWith('image'));
+  if (item) processFile(item.getAsFile());
+});
+
+function processFile(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const tex = new THREE.Texture(img);
+      tex.needsUpdate = true;
+      tex.encoding = THREE.sRGBEncoding;
+      if (activeTab==='shirt') shirtTex=tex; else pantsTex=tex;
+      document.getElementById('texThumb').src = ev.target.result;
+      document.getElementById('texThumb').style.display = 'block';
+      applyTex();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── EXPORT ──────────────────────────────────────────────────────────────────
+function exportTex() {
+  const c = document.createElement('canvas');
+  c.width=585; c.height=559;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,585,559);
+  const tex = activeTab==='shirt' ? shirtTex : pantsTex;
+  if (tex?.image) ctx.drawImage(tex.image,0,0,585,559);
+  const a=document.createElement('a');
+  a.download=`rblx-${activeTab}.png`;
+  a.href=c.toDataURL('image/png');
+  a.click();
+}
+
+// ── RENDER LOOP ─────────────────────────────────────────────────────────────
+(function animate() {
+  requestAnimationFrame(animate);
+  if (autoRot && avatarMesh) avatarMesh.rotation.y += 0.007;
+  renderer.render(scene, camera);
+})();
+
+window.addEventListener('resize', () => {
+  W=vp.clientWidth; H=vp.clientHeight;
+  camera.aspect=W/H; camera.updateProjectionMatrix();
+  renderer.setSize(W,H);
+});
+
+// INIT
+loadModel('blocky');
+</script>
+</body>
+</html>
