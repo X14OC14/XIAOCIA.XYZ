@@ -197,7 +197,7 @@
 <div class="header-area">
   <h1>⛏ FLAT WORLD GEN</h1>
   <div class="subtitle">Minecraft Bedrock Edition — FlatWorldLayers generator</div>
-  <div class="version-badge" onclick="toggleChangelog()">v1.4</div>
+  <div class="version-badge" onclick="toggleChangelog()">v1.6</div>
 </div>
 
 <div class="changelog-overlay" id="changelog-overlay" onclick="handleOverlayClick(event)">
@@ -205,7 +205,23 @@
     <div class="changelog-title">▸ CHANGELOG</div>
 
     <div class="changelog-entry">
-      <div class="changelog-ver">v1.4 — CURRENT</div>
+      <div class="changelog-ver">v1.6 — CURRENT</div>
+      <ul class="changelog-items">
+        <li>Update daftar biome Bedrock NBT lengkap: Overworld, Nether, End, dan Modern/Caves &amp; Cliffs</li>
+        <li>Fix ID biome lama yang keliru: Nether sekarang 8/178-181, Cherry Grove sekarang 192</li>
+        <li>Tambah biome yang sebelumnya belum ada: Ocean 0, Savanna Plateau 36, End biome 40-43, Mangrove Swamp 191, dan lainnya</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-ver">v1.5</div>
+      <ul class="changelog-items">
+        <li>Fix preset Full TNT biar gak jadi Void lagi — Generator tag sekarang aktif dengan 1 layer</li>
+      </ul>
+    </div>
+
+    <div class="changelog-entry">
+      <div class="changelog-ver">v1.4</div>
       <ul class="changelog-items">
         <li>Responsive proper — mobile & desktop layout terpisah</li>
         <li>Mobile: padding compact, font adjusted, button thumb-friendly</li>
@@ -453,34 +469,42 @@ const BLOCKS = [
 ];
 
 const BIOMES = [
-  {id:1,name:"Plains"},{id:2,name:"Desert"},{id:3,name:"Windswept Hills"},
-  {id:4,name:"Forest"},{id:5,name:"Taiga"},{id:6,name:"Swamp"},
-  {id:7,name:"River"},{id:10,name:"Frozen Ocean"},{id:11,name:"Frozen River"},
-  {id:12,name:"Snowy Plains"},{id:14,name:"Mushroom Fields"},
+  // Overworld
+  {id:0,name:"Ocean"},{id:1,name:"Plains"},{id:2,name:"Desert"},
+  {id:3,name:"Windswept Hills"},{id:4,name:"Forest"},{id:5,name:"Taiga"},
+  {id:6,name:"Swamp"},{id:7,name:"River"},{id:10,name:"Frozen Ocean"},
+  {id:11,name:"Frozen River"},{id:12,name:"Snowy Plains"},{id:14,name:"Mushroom Fields"},
   {id:16,name:"Beach"},{id:21,name:"Jungle"},{id:23,name:"Sparse Jungle"},
-  {id:24,name:"Deep Ocean"},{id:25,name:"Stone Shore"},{id:26,name:"Snowy Beach"},
-  {id:27,name:"Birch Forest"},{id:29,name:"Dark Forest"},
-  {id:30,name:"Snowy Taiga"},{id:32,name:"Old Growth Pine Taiga"},
-  {id:35,name:"Savanna"},{id:37,name:"Badlands"},{id:38,name:"Wooded Badlands"},
-  {id:43,name:"Warm Ocean"},{id:44,name:"Lukewarm Ocean"},{id:45,name:"Cold Ocean"},
-  {id:46,name:"Deep Warm Ocean"},{id:47,name:"Deep Lukewarm Ocean"},
-  {id:49,name:"Deep Frozen Ocean"},{id:140,name:"Ice Spikes"},
-  {id:149,name:"Bamboo Jungle"},{id:166,name:"Shattered Savanna"},
-  {id:168,name:"Eroded Badlands"},{id:171,name:"Soul Sand Valley"},
-  {id:172,name:"Crimson Forest"},{id:173,name:"Warped Forest"},
-  {id:174,name:"Basalt Deltas"},{id:177,name:"Dripstone Caves"},
-  {id:178,name:"Lush Caves"},{id:182,name:"Frozen Peaks"},
-  {id:183,name:"Jagged Peaks"},{id:184,name:"Stony Peaks"},
-  {id:185,name:"Snowy Slopes"},{id:186,name:"Meadow"},
-  {id:187,name:"Grove"},{id:188,name:"Cherry Grove"},
-  {id:190,name:"Deep Dark"},{id:0,name:"The Void"},
+  {id:24,name:"Deep Ocean"},{id:25,name:"Stony Shore"},{id:26,name:"Snowy Beach"},
+  {id:27,name:"Birch Forest"},{id:29,name:"Dark Forest"},{id:30,name:"Snowy Taiga"},
+  {id:32,name:"Old Growth Pine Taiga"},{id:35,name:"Savanna"},{id:36,name:"Savanna Plateau"},
+  {id:37,name:"Badlands"},{id:38,name:"Wooded Badlands"},{id:39,name:"Badlands Plateau"},
+  {id:44,name:"Warm Ocean"},{id:45,name:"Lukewarm Ocean"},{id:46,name:"Cold Ocean"},
+  {id:47,name:"Deep Warm Ocean"},{id:48,name:"Deep Lukewarm Ocean"},{id:49,name:"Deep Cold Ocean"},
+  {id:50,name:"Deep Frozen Ocean"},{id:127,name:"The Void"},{id:129,name:"Sunflower Plains"},
+  {id:132,name:"Flower Forest"},{id:155,name:"Old Growth Birch Forest"},{id:160,name:"Old Growth Spruce Taiga"},
+  {id:163,name:"Windswept Savanna"},{id:165,name:"Eroded Badlands"},{id:168,name:"Bamboo Jungle"},
+
+  // Nether
+  {id:8,name:"Nether Wastes"},{id:178,name:"Soul Sand Valley"},{id:179,name:"Crimson Forest"},
+  {id:180,name:"Warped Forest"},{id:181,name:"Basalt Deltas"},
+
+  // End
+  {id:9,name:"The End"},{id:40,name:"Small End Islands"},{id:41,name:"End Midlands"},
+  {id:42,name:"End Highlands"},{id:43,name:"End Barrens"},
+
+  // Modern / Caves & Cliffs
+  {id:182,name:"Jagged Peaks"},{id:183,name:"Frozen Peaks"},{id:184,name:"Snowy Slopes"},
+  {id:185,name:"Grove"},{id:186,name:"Meadow"},{id:187,name:"Lush Caves"},
+  {id:188,name:"Dripstone Caves"},{id:189,name:"Stony Peaks"},{id:190,name:"Deep Dark"},
+  {id:191,name:"Mangrove Swamp"},{id:192,name:"Cherry Grove"},
 ];
 
 const PRESETS = [
   { label:"Classic Flat", topBlock:"minecraft:grass_block",
     layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:dirt",count:2},{block:"minecraft:grass_block",count:1}], biome:1 },
   { label:"Void",         topBlock:null,
-    layers:[], biome:0 },
+    layers:[], biome:127 },
   { label:"All Stone",    topBlock:"minecraft:stone",
     layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:stone",count:3}], biome:1 },
   { label:"Desert",       topBlock:"minecraft:sand",
@@ -488,7 +512,7 @@ const PRESETS = [
   { label:"Snowy",        topBlock:"minecraft:snow_block",
     layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:stone",count:2},{block:"minecraft:dirt",count:2},{block:"minecraft:snow_block",count:1}], biome:12 },
   { label:"Nether",       topBlock:"minecraft:netherrack",
-    layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:netherrack",count:3},{block:"minecraft:soul_sand",count:1}], biome:171 },
+    layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:netherrack",count:3},{block:"minecraft:soul_sand",count:1}], biome:8 },
   { label:"Ocean Floor",  topBlock:"minecraft:water",
     layers:[{block:"minecraft:bedrock",count:1},{block:"minecraft:gravel",count:3},{block:"minecraft:water",count:5}], biome:44 },
   { label:"Full TNT",      topBlock:"minecraft:tnt",
@@ -861,7 +885,7 @@ function buildLevelDat(worldName, flatLayersJson, biomeId, biomeOverride) {
   w.tagInt   ("GameType",              1);   // Creative
   w.tagInt   ("Difficulty",            1);   // Easy
   w.tagByte  ("ForceGameType",         0);
-  w.tagInt   ("Generator",             JSON.parse(flatLayersJson).block_layers.length >= 2 ? 2 : 5);   // 2=Flat, 5=Void
+  w.tagInt   ("Generator",             JSON.parse(flatLayersJson).block_layers.length >= 1 ? 2 : 5);   // 2=Flat, 5=Void
   w.tagString("FlatWorldLayers",       flatLayersJson);
   if (biomeOverride) w.tagString("BiomeOverride", biomeOverride);
   w.tagInt   ("SpawnX",                0);
@@ -1067,8 +1091,59 @@ function generateMcworld() {
   });
 
   // Find biome name for BiomeOverride tag
-  const biomeEntry = BIOMES.find(b => b.id === selectedBiome);
-  const biomeOverride = biomeEntry ? 'minecraft:' + biomeEntry.name.toLowerCase().replace(/ /g,'_') : '';
+  const BIOME_OVERRIDE_MAP = {
+    0:   '',               // The Void — no override
+    1:   'plains',
+    2:   'desert',
+    3:   'extreme_hills',
+    4:   'forest',
+    5:   'taiga',
+    6:   'swampland',
+    7:   'river',
+    10:  'frozen_ocean',
+    11:  'frozen_river',
+    12:  'ice_plains',
+    14:  'mushroom_island',
+    16:  'beach',
+    21:  'jungle',
+    23:  'jungle_edge',
+    24:  'deep_ocean',
+    25:  'stone_beach',
+    26:  'cold_beach',
+    27:  'birch_forest',
+    29:  'roofed_forest',
+    30:  'cold_taiga',
+    32:  'mega_taiga',
+    35:  'savanna',
+    37:  'mesa',
+    38:  'mesa_plateau_f',
+    43:  'warm_ocean',
+    44:  'lukewarm_ocean',
+    45:  'cold_ocean',
+    46:  'deep_warm_ocean',
+    47:  'deep_lukewarm_ocean',
+    49:  'deep_frozen_ocean',
+    140: 'ice_plains_spikes',
+    149: 'bamboo_jungle',
+    166: 'mutated_savanna',
+    168: 'mutated_mesa',
+    171: 'soul_sand_valley',
+    172: 'crimson_forest',
+    173: 'warped_forest',
+    174: 'basalt_deltas',
+    177: 'dripstone_caves',
+    178: 'lush_caves',
+    182: 'frozen_peaks',
+    183: 'jagged_peaks',
+    184: 'stony_peaks',
+    185: 'snowy_slopes',
+    186: 'meadow',
+    187: 'grove',
+    188: 'cherry_grove',
+    190: 'deep_dark',
+  };
+  const rawOverride = BIOME_OVERRIDE_MAP[selectedBiome];
+  const biomeOverride = (rawOverride !== undefined && rawOverride !== '') ? 'minecraft:' + rawOverride : '';
   const levelDat  = buildLevelDat(worldName, flatJson, selectedBiome, biomeOverride);
   const manifest  = b64ToBytes(MANIFEST_B64);
   const enc       = new TextEncoder();
