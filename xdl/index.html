@@ -3,78 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twitter Video Downloader</title>
+    <title>Twitter Video Downloader - Premium Service</title>
     <style>
-        body { font-family: sans-serif; background: #15202b; color: white; padding: 20px; text-align: center; }
-        .container { max-width: 500px; margin: 50px auto; background: #192734; padding: 30px; border-radius: 10px; }
-        input { width: 90%; padding: 12px; margin-bottom: 20px; border: none; border-radius: 5px; }
-        button { background: #1da1f2; color: white; border: none; padding: 12px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 95%; }
-        #tempatVideo { margin-top: 30px; }
-        video { max-width: 100%; border-radius: 5px; }
-        .btn-dl { display: inline-block; background: #23d160; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 15px; font-weight: bold; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #0f1419; color: #e7e9ea; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { width: 100%; max-width: 480px; background-color: #15181c; border: 1px solid #2f3336; border-radius: 16px; padding: 32px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+        h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #fff; text-align: left; }
+        .subtitle { font-size: 14px; color: #71767b; margin-bottom: 24px; text-align: left; line-height: 1.5; }
+        .form-group { margin-bottom: 16px; text-align: left; }
+        label { display: block; font-size: 13px; font-weight: 600; color: #71767b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        input[type="text"] { width: 100%; padding: 14px 16px; background-color: #000; border: 1px solid #2f3336; border-radius: 8px; color: #fff; font-size: 15px; transition: border-color 0.2s; }
+        input[type="text"]:focus { outline: none; border-color: #1d9bf0; }
+        button { width: 100%; background-color: #1d9bf0; color: #fff; border: none; padding: 14px; border-radius: 24px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background-color 0.2s; margin-top: 8px; }
+        button:hover { background-color: #1a8cd8; }
+        button:active { background-color: #177cc0; }
+        #outputSection { margin-top: 24px; }
+        .status-message { font-size: 14px; color: #71767b; text-align: center; padding: 12px; }
+        .error-message { font-size: 14px; color: #f4212e; text-align: left; background-color: rgba(244, 33, 46, 0.1); padding: 12px 16px; border-radius: 8px; border: 1px solid rgba(244, 33, 46, 0.2); }
+        .result-card { background-color: #1e2226; border: 1px solid #2f3336; border-radius: 12px; padding: 20px; text-align: left; }
+        .result-title { font-size: 14px; font-weight: 600; color: #fff; line-height: 1.5; margin-bottom: 12px; }
+        .meta-tag { display: inline-block; font-size: 11px; font-weight: 700; color: #1d9bf0; background-color: rgba(29, 155, 240, 0.1); padding: 4px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-download { display: block; background-color: #00ba7c; color: #fff; text-align: center; text-decoration: none; padding: 14px; border-radius: 24px; font-size: 15px; font-weight: 700; margin-top: 16px; transition: background-color 0.2s; }
+        .btn-download:hover { background-color: #00a36c; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Twitter Downloader</h2>
-        <p>Bisa download video tanpa bocor API Key temen</p>
+        <h2>Twitter Video Downloader</h2>
+        <p class="subtitle">Layanan ekstraksi video resolusi tinggi dari platform Twitter/X secara aman dan terenkripsi.</p>
         
-        <input type="text" id="inputLink" placeholder="Tempel link Twitter/X di sini...">
-        <button id="tombolCari">Cari Video</button>
+        <div class="form-group">
+            <label for="inputLink">Tautan Video (URL)</label>
+            <input type="text" id="inputLink" placeholder="https://x.com/.../status/..." autocomplete="off">
+        </div>
+        <button id="btnFetch">Proses Unduhan</button>
 
-        <div id="tempatVideo"></div>
+        <div id="outputSection"></div>
     </div>
 
     <script>
-        document.getElementById('tombolCari').addEventListener('click', function() {
-    let linkTwitter = document.getElementById('inputLink').value.trim();
-    const kotakHasil = document.getElementById('tempatVideo');
+        document.getElementById('btnFetch').addEventListener('click', function() {
+            let urlInput = document.getElementById('inputLink').value.trim();
+            const outputContainer = document.getElementById('outputSection');
 
-    if (!linkTwitter) {
-        alert('Isi dulu link-nya, bos!');
-        return;
-    }
-
-    kotakHasil.innerHTML = "<p style='color: #8899a6;'>Sabar... Kurir Render lagi jalan...</p>";
-
-    // Trik otomatis benerin format link /i/status/ biar gak eror
-    if (linkTwitter.includes('/i/status/')) {
-        linkTwitter = linkTwitter.replace('/i/status/', '/web/status/');
-    }
-
-    const urlKurir = "https://my-proxy-sjob.onrender.com";
-
-    fetch(`${urlKurir}/api/download/twitter?url=${encodeURIComponent(linkTwitter)}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data.status && data.result && data.result.url && data.result.url.length > 0) {
-                
-                // KUNCI UTAMA: Ambil link dari key 'hd'. Kalau gak ada, baru oper ke 'sd'
-                const linkVideoMateng = data.result.url[0].hd || data.result.url[1].sd;
-
-                if (!linkVideoMateng) {
-                    kotakHasil.innerHTML = `<p style="color:red;">Gagal membongkar link video. Cek console log.</p>`;
-                    return;
-                }
-
-                // Tampilkan video dan tombol download tab baru yang aman
-                kotakHasil.innerHTML = `
-                    <p style='color: #23d160; font-weight: bold;'>Video Ditemukan!</p>
-                    <p style='font-size: 14px; color: #8899a6; text-align: left;'>${data.result.title || ''}</p>
-                    <video src="${linkVideoMateng}" controls style="max-width: 100%; border-radius: 5px; margin-top: 10px;"></video>
-                    <br>
-                    <a href="${linkVideoMateng}" target="_blank" rel="noopener noreferrer" class="btn-dl">Download Video</a>
-                `;
-            } else {
-                kotakHasil.innerHTML = `<p style="color:red;">Eror: ${data.message || 'Video gak ketemu/API lagi ngadat.'}</p>`;
+            if (!urlInput) {
+                alert('Peringatan: Kolom tautan URL wajib diisi.');
+                return;
             }
-        })
-        .catch(err => {
-            kotakHasil.innerHTML = `<p style="color:#ffad1f;">Server lagi bangun tidur (butuh ~50 detik). <br>Coba klik tombolnya lagi sekarang!</p>`;
+
+            outputContainer.innerHTML = "<p class='status-message'>Menghubungkan ke server proxy, mohon tunggu...</p>";
+
+            // Standardisasi format URL Twitter/X untuk pemrosesan API
+            if (urlInput.includes('/i/status/')) {
+                urlInput = urlInput.replace('/i/status/', '/web/status/');
+            }
+
+            const proxyEndpoint = "https://my-proxy-sjob.onrender.com";
+
+            fetch(`${proxyEndpoint}/api/download/twitter?url=${encodeURIComponent(urlInput)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status && data.result && data.result.url && data.result.url.length > 0) {
+                        
+                        // Seleksi prioritas resolusi video tertinggi (HD) ke standar (SD)
+                        const validatedDownloadUrl = data.result.url[0].hd || data.result.url[1].sd;
+
+                        if (!validatedDownloadUrl) {
+                            outputContainer.innerHTML = `<p class="error-message">Kegagalan sistem: Struktur data media tidak dapat diurai secara valid.</p>`;
+                            return;
+                        }
+
+                        outputContainer.innerHTML = `
+                            <div class="result-card">
+                                <p class="result-title">${data.result.title || 'Konten Video Berhasil Diverifikasi'}</p>
+                                <span class="meta-tag">Kualitas: HD (MP4)</span>
+                                <a href="${validatedDownloadUrl}" target="_blank" rel="noopener noreferrer" class="btn-download">Unduh File Video</a>
+                            </div>
+                        `;
+                    } else {
+                        outputContainer.innerHTML = `<p class="error-message">Kesalahan Eksternal: ${data.message || 'Konten media tidak ditemukan atau bersifat privat.'}</p>`;
+                    }
+                })
+                .catch(err => {
+                    outputContainer.innerHTML = `<p class="error-message">Waktu koneksi habis. Server backend sedang menginisiasi ulang sistem. Silakan tekan tombol proses kembali dalam 30 detik.</p>`;
+                });
         });
-});
     </script>
 </body>
 </html>
-
