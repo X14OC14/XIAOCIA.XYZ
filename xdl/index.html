@@ -28,41 +28,54 @@
 
     <script>
         document.getElementById('tombolCari').addEventListener('click', function() {
-            const linkTwitter = document.getElementById('inputLink').value;
-            const kotakHasil = document.getElementById('tempatVideo');
+    const linkTwitter = document.getElementById('inputLink').value;
+    const kotakHasil = document.getElementById('tempatVideo');
 
-            if (!linkTwitter) {
-                alert('Isi dulu link-nya, bos!');
-                return;
+    if (!linkTwitter) {
+        alert('Isi dulu link-nya, bos!');
+        return;
+    }
+
+    kotakHasil.innerHTML = "<p style='color: #8899a6;'>Sabar... Kurir Render lagi jalan...</p>";
+
+    const urlKurir = "https://my-proxy-sjob.onrender.com";
+
+    fetch(`${urlKurir}/api/download/twitter?url=${encodeURIComponent(linkTwitter)}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.status) {
+                // BIAR GAK [object Object]: Kita bongkar isi array resminya
+                let linkVideoMateng = "";
+                
+                if (Array.isArray(data.result.url)) {
+                    // Ambil link URL dari objek pertama di dalam array
+                    linkVideoMateng = data.result.url[0].url; 
+                } else {
+                    linkVideoMateng = data.result.url;
+                }
+
+                // Cek lagi kalau misal linknya masih kosong
+                if (!linkVideoMateng) {
+                    kotakHasil.innerHTML = `<p style="color:red;">Video gagal dimuat, link video tidak ditemukan.</p>`;
+                    return;
+                }
+
+                // BIAR GAK 404: Kita paksa tag <a> buat ngebuka tab baru pakai target="_blank" dan rel="noopener"
+                kotakHasil.innerHTML = `
+                    <p style='color: #23d160;'>Video Ditemukan!</p>
+                    <video src="${linkVideoMateng}" controls style="max-width: 100%; border-radius: 5px;"></video>
+                    <br>
+                    <a href="${linkVideoMateng}" target="_blank" rel="noopener noreferrer" class="btn-dl" download="video.mp4">Download Video</a>
+                `;
+            } else {
+                kotakHasil.innerHTML = `<p style="color:red;">Eror: ${data.message || 'Video gak ketemu.'}</p>`;
             }
-
-            kotakHasil.innerHTML = "<p style='color: #8899a6;'>Sabar... Kurir Render lagi jalan...</p>";
-
-            // Mengarah ke URL Render lu yang udah sukses kemarin
-            const urlKurir = "https://my-proxy-sjob.onrender.com";
-
-            fetch(`${urlKurir}/api/download/twitter?url=${encodeURIComponent(linkTwitter)}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status) {
-                        // Ambil link video mateng dari response API temen lu
-                        const linkVideoMateng = data.result.url[0].url || data.result.url;
-
-                        kotakHasil.innerHTML = `
-                            <p style='color: #23d160;'>Video Ditemukan!</p>
-                            <video src="${linkVideoMateng}" controls></video>
-                            <br>
-                            <a href="${linkVideoMateng}" target="_blank" class="btn-dl">Download Video</a>
-                        `;
-                    } else {
-                        kotakHasil.innerHTML = `<p style="color:red;">Eror: ${data.message || 'Video gak ketemu.'}</p>`;
-                    }
-                })
-                .catch(err => {
-                    // Jika Render lagi tidur (spin down), ingetin user buat klik lagi
-                    kotakHasil.innerHTML = `<p style="color:#ffad1f;">Server lagi bangun tidur (butuh ~50 detik). <br>Coba klik tombolnya lagi sekarang!</p>`;
-                });
+        })
+        .catch(err => {
+            kotakHasil.innerHTML = `<p style="color:#ffad1f;">Server lagi bangun tidur (butuh ~50 detik). <br>Coba klik tombolnya lagi sekarang!</p>`;
         });
+});
+
     </script>
 </body>
 </html>
