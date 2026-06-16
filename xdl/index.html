@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Video Downloader</title>
+    <style>
+        body { font-family: sans-serif; background: #15202b; color: white; padding: 20px; text-align: center; }
+        .container { max-width: 500px; margin: 50px auto; background: #192734; padding: 30px; border-radius: 10px; }
+        input { width: 90%; padding: 12px; margin-bottom: 20px; border: none; border-radius: 5px; }
+        button { background: #1da1f2; color: white; border: none; padding: 12px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; width: 95%; }
+        #tempatVideo { margin-top: 30px; }
+        video { max-width: 100%; border-radius: 5px; }
+        .btn-dl { display: inline-block; background: #23d160; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Twitter Downloader</h2>
+        <p>Bisa download video tanpa bocor API Key temen</p>
+        
+        <input type="text" id="inputLink" placeholder="Tempel link Twitter/X di sini...">
+        <button id="tombolCari">Cari Video</button>
+
+        <div id="tempatVideo"></div>
+    </div>
+
+    <script>
+        document.getElementById('tombolCari').addEventListener('click', function() {
+            const linkTwitter = document.getElementById('inputLink').value;
+            const kotakHasil = document.getElementById('tempatVideo');
+
+            if (!linkTwitter) {
+                alert('Isi dulu link-nya, bos!');
+                return;
+            }
+
+            kotakHasil.innerHTML = "<p style='color: #8899a6;'>Sabar... Kurir Render lagi jalan...</p>";
+
+            // Mengarah ke URL Render lu yang udah sukses kemarin
+            const urlKurir = "https://my-proxy-sjob.onrender.com";
+
+            fetch(`${urlKurir}/api/download/twitter?url=${encodeURIComponent(linkTwitter)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status) {
+                        // Ambil link video mateng dari response API temen lu
+                        const linkVideoMateng = data.result.url[0].url || data.result.url;
+
+                        kotakHasil.innerHTML = `
+                            <p style='color: #23d160;'>Video Ditemukan!</p>
+                            <video src="${linkVideoMateng}" controls></video>
+                            <br>
+                            <a href="${linkVideoMateng}" target="_blank" class="btn-dl">Download Video</a>
+                        `;
+                    } else {
+                        kotakHasil.innerHTML = `<p style="color:red;">Eror: ${data.message || 'Video gak ketemu.'}</p>`;
+                    }
+                })
+                .catch(err => {
+                    // Jika Render lagi tidur (spin down), ingetin user buat klik lagi
+                    kotakHasil.innerHTML = `<p style="color:#ffad1f;">Server lagi bangun tidur (butuh ~50 detik). <br>Coba klik tombolnya lagi sekarang!</p>`;
+                });
+        });
+    </script>
+</body>
+</html>
+
