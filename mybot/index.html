@@ -155,15 +155,16 @@
     padding:16px;
     height:280px;
     overflow-y:auto;
+    overflow-x:auto;
     font-family:'IBM Plex Mono',monospace;
-    font-size:12.5px;
+    font-size:12px;
     line-height:1.7;
     color:#c4c4cc;
   }
-  .console::-webkit-scrollbar{width:6px;}
+  .console::-webkit-scrollbar{width:6px;height:6px;}
   .console::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-  .console-line{white-space:pre-wrap;word-break:break-all;}
-  .console-empty{color:var(--muted);}
+  .console-line{white-space:pre;}
+  .console-empty{color:var(--muted);white-space:normal;}
 
   @media (max-width:560px){
     h1{font-size:28px;}
@@ -265,6 +266,11 @@
       statusTextEl.textContent = text;
     }
 
+    // Hapus kode warna ANSI (escape sequence terminal) biar gak muncul karakter aneh
+    function stripAnsi(str) {
+      return str.replace(/\x1b\[[0-9;]*m/g, '');
+    }
+
     function appendLine(text) {
       if (firstMessage) {
         consoleEl.innerHTML = '';
@@ -272,7 +278,7 @@
       }
       const line = document.createElement('div');
       line.className = 'console-line';
-      line.textContent = text;
+      line.textContent = stripAnsi(text);
       consoleEl.appendChild(line);
 
       while (consoleEl.children.length > MAX_LINES) {
